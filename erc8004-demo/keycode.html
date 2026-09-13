@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>ERC-8004 关键代码导览</title>
+<style>
+  :root{--bg:#F7F7F4;--card:#FFF;--border:#E3E1D9;--text:#2C2C2A;--muted:#6E6D66;--faint:#9C9B93;
+    --blue:#185FA5;--blue-bg:#E6F1FB;--purple:#534AB7;--purple-bg:#EEEDFE;--teal:#0F6E56;--teal-bg:#E1F5EE;
+    --amber:#854F0B;--amber-bg:#FAEEDA;--mono:ui-monospace,'Cascadia Code',Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  header{background:var(--card);border-bottom:1px solid var(--border);padding:16px 24px}
+  header h1{font-size:18px;font-weight:600}
+  header .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  main{max-width:960px;margin:20px auto;padding:0 20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:11px;padding:2px 10px;border-radius:10px;color:#fff;font-weight:500;white-space:nowrap}
+  .t-blue{background:var(--blue)}.t-purple{background:var(--purple)}.t-teal{background:var(--teal)}
+  .muted{color:var(--muted);font-size:12.5px}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  pre{background:#282C34;color:#ABB2BF;border-radius:10px;padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.6;overflow-x:auto;margin:10px 0}
+  pre .k{color:#C678DD}.k2{color:#C678DD}.f{color:#61AFEF}.t{color:#E5C07B}.c{color:#7F848E;font-style:italic}.n{color:#D19A66}.s{color:#98C379}
+  .point{background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:8px 12px;margin:8px 0;font-size:12.5px;color:var(--amber)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--muted);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}tr:last-child td{border-bottom:none}
+  .src{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px}
+  @media(max-width:760px){.src{grid-template-columns:1fr}}
+  .src a{display:block;border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:#FAFAF7}
+  .src b{display:block;font-size:13px;margin-bottom:2px}.src span{font-size:12px;color:var(--muted)}
+  ol{padding-left:20px;font-size:13px}ol li{margin:6px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>ERC-8004 关键代码导览</h1>
+  <div class="sub">来源：EIP-8004 规范原文（eips.ethereum.org/EIPS/eip-8004）· 以下 Solidity 代码为规范中定义的接口签名原样摘录</div>
+</header>
+<main>
+
+<div class="card">
+  <h2><span class="tag t-blue">去哪看</span>三个可以现场展示"协议本体代码"的地方</h2>
+  <div class="src">
+    <a href="https://eips.ethereum.org/EIPS/eip-8004" target="_blank">
+      <b>EIP-8004 规范原文</b><span>接口签名、事件、安全考量的权威来源（本页代码出处）</span></a>
+    <a href="https://github.com/ERC-8004/erc-8004-contracts" target="_blank">
+      <b>官方参考实现仓库</b><span>erc-8004-contracts，可直接阅读完整 Solidity 合约与测试</span></a>
+    <a href="https://sepolia.etherscan.io/address/0x8004A818BFB912233c491871b3d84c89A494BD9e#code" target="_blank">
+      <b>Sepolia 已验证合约源码</b><span>Etherscan 上直接看部署在公链上的真实代码（#code 标签页）</span></a>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="tag t-blue">① IdentityRegistry</span>身份注册表 —— 智能体的"数字营业执照"</h2>
+  <pre><span class="k">event</span> <span class="f">Registered</span>(<span class="k2">uint256</span> <span class="k">indexed</span> agentId, <span class="k2">string</span> agentURI, <span class="k2">address</span> <span class="k">indexed</span> owner);
+
+<span class="c">// 注册：铸造 ERC-721，返回 agentId —— 链上只存 URI 指针</span>
+<span class="k">function</span> <span class="f">register</span>(<span class="k2">string</span> agentURI) <span class="k">external</span> <span class="k">returns</span> (<span class="k2">uint256</span> agentId);
+<span class="k">function</span> <span class="f">register</span>(<span class="k2">string</span> agentURI, MetadataEntry[] <span class="k">calldata</span> metadata) <span class="k">external</span> <span class="k">returns</span> (<span class="k2">uint256</span> agentId);
+
+<span class="c">// 身份信息可更新 —— 履历随身份保留，URI 换了历史不丢</span>
+<span class="k">function</span> <span class="f">setAgentURI</span>(<span class="k2">uint256</span> agentId, <span class="k2">string</span> <span class="k">calldata</span> newURI) <span class="k">external</span>;
+
+<span class="c">// 保留的收款钱包字段：变更需 EIP-712 签名验证，防止冒充</span>
+<span class="k">function</span> <span class="f">setAgentWallet</span>(<span class="k2">uint256</span> agentId, <span class="k2">address</span> newWallet, <span class="k2">uint256</span> deadline, <span class="k2">bytes</span> <span class="k">calldata</span> signature) <span class="k">external</span>;</pre>
+  <div class="point">讲解要点：register() 只接收一个字符串指针（agentURI），注册文件本体在 IPFS/HTTPS 链下——这就是"链上存指针、链下存内容"。agentId 是 ERC-721 NFT，谁持有它谁拥有这个身份和全部历史。</div>
+</div>
+
+<div class="card">
+  <h2><span class="tag t-purple">② ReputationRegistry</span>声誉注册表 —— 只存信号，不存评分</h2>
+  <pre><span class="c">// 提交反馈：带符号定点数 int128 + 小数位，可正可负；证据文件在链下</span>
+<span class="k">function</span> <span class="f">giveFeedback</span>(<span class="k2">uint256</span> agentId,
+                     <span class="k2">int128</span>  value,          <span class="c">// 例: 87 表示 87 分，-32 表示 -3.2%（配合 decimals）</span>
+                     <span class="k2">uint8</span>   valueDecimals,  <span class="c">// 例: 2 → 实际含义 0.87</span>
+                     <span class="k2">string</span>  <span class="k">calldata</span> tag1, tag2,      <span class="c">// 维度标签: quality / uptime / tradingYield…</span>
+                     <span class="k2">string</span>  <span class="k">calldata</span> feedbackURI,     <span class="c">// 链下证据文件指针</span>
+                     <span class="k2">bytes32</span> feedbackHash) <span class="k">external</span>;
+
+<span class="c">// 汇总查询：clientAddresses 为必填 —— 强制按客户端过滤，抑制女巫刷分</span>
+<span class="k">function</span> <span class="f">getSummary</span>(<span class="k2">uint256</span> agentId, <span class="k2">address</span>[] <span class="k">calldata</span> clientAddresses,
+                   <span class="k2">string</span> tag1, <span class="k2">string</span> tag2)
+                   <span class="k">external</span> <span class="k">view</span> <span class="k">returns</span> (<span class="k2">uint64</span> count, <span class="k2">int128</span> summaryValue, <span class="k2">uint8</span> valueDecimals);
+
+<span class="k">function</span> <span class="f">revokeFeedback</span>(<span class="k2">uint256</span> agentId, <span class="k2">uint64</span> feedbackIndex) <span class="k">external</span>;</pre>
+  <div class="point">讲解要点：协议刻意不定义"平均分"或"信任排名"——只标准化原始信号的存取。市场按完成速度加权、保险公司按纠纷历史算风险，各自消费同一份数据（可组合性）。getSummary 强制要求传入 clientAddresses 过滤，是规范里内建的女巫攻击缓解设计。</div>
+</div>
+
+<div class="card">
+  <h2><span class="tag t-teal">③ ValidationRegistry</span>验证注册表 —— 高风险输出的"独立审计"</h2>
+  <pre><span class="c">// 请求验证 → 验证者（TEE / zkML / 质押重执行）离线检查 → 链上应答 0-100 分</span>
+<span class="k">function</span> <span class="f">validationRequest</span>(<span class="k2">address</span> validatorAddress, <span class="k2">uint256</span> agentId,
+                          <span class="k2">string</span> <span class="k">calldata</span> requestURI, <span class="k2">bytes32</span> requestHash) <span class="k">external</span>;
+
+<span class="k">function</span> <span class="f">validationResponse</span>(<span class="k2">bytes32</span> requestHash,
+                           <span class="k2">uint8</span>   response,      <span class="c">// 0-100 的验证结果</span>
+                           <span class="k2">string</span>  <span class="k">calldata</span> responseURI, <span class="k2">bytes32</span> responseHash,
+                           <span class="k2">string</span>  <span class="k">calldata</span> tag) <span class="k">external</span>;
+
+<span class="c">// 按 requestHash 查询某次验证的状态；或按 agentId 聚合统计</span>
+<span class="k">function</span> <span class="f">getValidationStatus</span>(<span class="k2">bytes32</span> requestHash) <span class="k">external</span> <span class="k">view</span>
+  <span class="k">returns</span> (<span class="k2">address</span> validatorAddress, <span class="k2">uint256</span> agentId, <span class="k2">uint8</span> response, <span class="k2">uint256</span> lastUpdate);
+
+<span class="k">function</span> <span class="f">getSummary</span>(<span class="k2">uint256</span> agentId, <span class="k2">address</span>[] <span class="k">calldata</span> validatorAddresses, <span class="k2">string</span> tag)
+  <span class="k">external</span> <span class="k">view</span> <span class="k">returns</span> (<span class="k2">uint64</span> count, <span class="k2">uint8</span> averageResponse);</pre>
+  <div class="point">讲解要点：验证模型是"可插拔"的——协议只记录请求和应答，不规定验证者怎么验证。安全性随风险价值升级：低风险交互看声誉即可，大额操作才请 TEE/zkML 独立验证（响应 0-100，链上任何人可查）。</div>
+</div>
+
+<div class="card">
+  <h2><span class="tag t-blue">④ 对照</span>规范接口 ↔ 我们的本地演示实现</h2>
+  <table>
+    <tr><th>ERC-8004 规范接口</th><th>本地演示（agent-platform）</th><th>说明</th></tr>
+    <tr><td class="mono">register(string agentURI)</td><td class="mono">server.js → registerAgent()</td><td>本地发 agentId + 存 agentURI 指针，逻辑一致</td></tr>
+    <tr><td class="mono">giveFeedback(int128 value, …)</td><td class="mono">server.js → /api/feedback</td><td>同样只存原始分值，评分由前端两种模型各自计算</td></tr>
+    <tr><td class="mono">validationRequest / validationResponse</td><td class="mono">server.js → requestValidation()</td><td>同样 0-100 应答，验证方式可选</td></tr>
+    <tr><td class="mono">注册文件 JSON（registration-v1）</td><td class="mono">agentCard() / agent-card.json</td><td>字段格式与规范一致（type/services/registrations/supportedTrust）</td></tr>
+    <tr><td class="mono">x402 支付（标准外）</td><td class="mono">OrderCreated / PaymentReleased（LGC 积分）</td><td>协议不含支付，本地用积分结算演示完整商业闭环</td></tr>
+    <tr><td class="mono">真实链上 Events</td><td class="mono">模拟链账本（Explorer）</td><td>上 Sepolia 后即为真实交易（见 sepolia/register.cjs）</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h2><span class="tag t-teal">⑤ 节奏</span>建议的课堂展示顺序</h2>
+  <ol>
+    <li><b>先讲结构</b>：用本页三个代码块讲"三大注册表各管什么"——身份（NFT）、声誉（信号）、验证（0-100 应答）。</li>
+    <li><b>再跑真流程</b>：切到 AgentHub（node server.js），注册 → 下单 → 反馈，让抽象接口落到能看到的事件。</li>
+    <li><b>最后上真链</b>：打开 Etherscan 的已验证合约或你自己的注册交易（sepolia/register.cjs 产出），证明"刚才的一切就是这笔交易"。</li>
+  </ol>
+  <p class="muted" style="margin-top:8px">提示：讲解每段代码时，重点让学生注意 <span class="mono">giveFeedback</span> 的 int128 + tag 设计和 <span class="mono">getSummary</span> 的强制地址过滤——这两处最能体现"协议只做信任原语、不做应用决策"的设计哲学。</p>
+</div>
+
+</main>
+<script>
+// 简单高亮已内嵌于 pre 的 span 标注中，无需额外处理
+</script>
+</body>
+</html>
