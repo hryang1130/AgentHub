@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERC-8004 实操演示 · Trustless Agents</title>
+<style>
+  :root{
+    --bg:#F7F7F4; --card:#FFFFFF; --border:#E3E1D9; --border2:#C9C7BD;
+    --text:#2C2C2A; --muted:#6E6D66; --faint:#9C9B93;
+    --blue:#185FA5; --blue-bg:#E6F1FB; --purple:#534AB7; --purple-bg:#EEEDFE;
+    --teal:#0F6E56; --teal-bg:#E1F5EE; --amber:#854F0B; --amber-bg:#FAEEDA;
+    --coral:#993C1D; --coral-bg:#FAECE7; --red:#A32D2D;
+    --mono:ui-monospace,'Cascadia Code',Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  header h1{font-size:17px;font-weight:600}
+  header .sub{font-size:12px;color:var(--muted)}
+  .chain-badge{display:inline-flex;align-items:center;gap:6px;background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);border-radius:20px;padding:3px 12px;font-size:12px;font-family:var(--mono)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  nav{display:flex;gap:4px;background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;overflow-x:auto}
+  nav button{border:none;background:none;padding:12px 16px;font-size:13.5px;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;font-family:inherit}
+  nav button.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  main{max-width:980px;margin:20px auto;padding:0 20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .card h3{font-size:13.5px;font-weight:600;margin:12px 0 6px}
+  .step-tag{font-size:11px;padding:2px 8px;border-radius:10px;color:#fff;font-weight:500}
+  .muted{color:var(--muted);font-size:12.5px}
+  .mono{font-family:var(--mono);font-size:12px}
+  pre.json{background:#FAFAF7;border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:12px;overflow-x:auto;line-height:1.55;white-space:pre-wrap;word-break:break-all}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+  input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:var(--text)}
+  input:focus,select:focus{outline:2px solid var(--blue-bg);border-color:var(--blue)}
+  .btn{display:inline-block;border:none;border-radius:8px;padding:9px 18px;font-size:13.5px;cursor:pointer;font-family:inherit;font-weight:500;margin-top:12px}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-purple{background:var(--purple);color:#fff}
+  .btn-teal{background:var(--teal);color:#fff}
+  .btn-ghost{background:#fff;color:var(--text);border:1px solid var(--border2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-sm{padding:5px 12px;font-size:12px;margin-top:0}
+  .agent-card{border:1px solid var(--border);border-radius:12px;padding:16px;position:relative}
+  .agent-card .nft{border:1px solid var(--border);border-radius:10px;background:linear-gradient(135deg,var(--blue-bg),var(--purple-bg));padding:14px;margin:10px 0}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;margin-right:6px}
+  .b-blue{background:var(--blue-bg);color:var(--blue)}
+  .b-purple{background:var(--purple-bg);color:var(--purple)}
+  .b-teal{background:var(--teal-bg);color:var(--teal)}
+  .b-amber{background:var(--amber-bg);color:var(--amber)}
+  .b-coral{background:var(--coral-bg);color:var(--coral)}
+  .b-red{background:#FCEBEB;color:var(--red)}
+  .b-gray{background:#F1EFE8;color:var(--muted)}
+  .stat-row{display:flex;gap:18px;margin:10px 0;font-size:12.5px}
+  .stat b{font-size:16px;font-weight:600;display:block}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--muted);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .hash{font-family:var(--mono);font-size:11.5px;color:var(--blue)}
+  .ev{font-family:var(--mono);font-size:11.5px;font-weight:600}
+  .status-line{font-size:12.5px;padding:6px 10px;border-left:3px solid var(--border2);background:#FAFAF7;margin:6px 0;border-radius:0 6px 6px 0}
+  .status-line.ok{border-left-color:var(--teal);color:var(--teal)}
+  .status-line.info{border-left-color:var(--blue)}
+  .status-line.warn{border-left-color:var(--amber)}
+  .score-big{font-size:30px;font-weight:600;font-family:var(--mono)}
+  input[type=range]{width:100%;accent-color:var(--purple)}
+  .steps-demo li{margin:8px 0;font-size:13px}
+  .hint{background:var(--amber-bg);border:1px solid var(--amber);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--amber);margin:10px 0}
+  .success{background:var(--teal-bg);border:1px solid var(--teal);border-radius:8px;padding:12px 16px;margin:10px 0;font-size:13px;color:var(--teal)}
+  ol.script{padding-left:20px}
+  ol.script li{margin:7px 0}
+  .kv{font-size:12.5px}
+  .kv b{font-weight:600}
+  .empty{color:var(--faint);text-align:center;padding:24px;font-size:13px}
+  .fade-in{animation:fadein .4s}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  #langBtn{font-weight:600}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 data-i18n="app.title">ERC-8004 实操演示</h1>
+    <div class="sub" data-i18n="app.sub"></div>
+    <div class="sub" data-i18n="app.sub2"></div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span class="chain-badge"><span class="dot"></span><span id="chainStat"></span></span>
+    <button class="btn btn-ghost btn-sm" id="langBtn" onclick="switchLang()">English</button>
+    <button class="btn btn-ghost btn-sm" onclick="resetAll()" data-i18n="app.reset"></button>
+  </div>
+</header>
+
+<nav id="tabs">
+  <button data-tab="overview" class="active" data-i18n="tab.overview"></button>
+  <button data-tab="register" data-i18n="tab.register"></button>
+  <button data-tab="discover" data-i18n="tab.discover"></button>
+  <button data-tab="feedback" data-i18n="tab.feedback"></button>
+  <button data-tab="explorer" data-i18n="tab.explorer"></button>
+</nav>
+
+<main>
+
+<!-- ============ 总览 ============ -->
+<section id="tab-overview">
+  <div class="card">
+    <h2><span class="step-tag" style="background:var(--blue)" data-i18n="ov.tag"></span><span data-i18n="ov.h"></span></h2>
+    <p style="font-size:13.5px" data-i18n="ov.text"></p>
+    <div class="hint" data-i18n="ov.hint"></div>
+  </div>
+  <div class="card">
+    <h2><span class="step-tag" style="background:var(--purple)" data-i18n="ov.scriptTag"></span><span data-i18n="ov.scriptH"></span></h2>
+    <ol class="script">
+      <li data-i18n="ov.s1"></li>
+      <li data-i18n="ov.s2"></li>
+      <li data-i18n="ov.s3"></li>
+      <li data-i18n="ov.s4"></li>
+      <li data-i18n="ov.s5"></li>
+      <li data-i18n="ov.s6"></li>
+    </ol>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2><span class="step-tag" style="background:var(--teal)" data-i18n="ov.dataTag"></span><span data-i18n="ov.chainH"></span></h2>
+      <div id="chainSummary"></div>
+    </div>
+    <div class="card">
+      <h2><span class="step-tag" style="background:var(--coral)" data-i18n="ov.ptsTag"></span><span data-i18n="ov.ptsH"></span></h2>
+      <ul style="padding-left:18px;font-size:13px">
+        <li data-i18n="ov.p1"></li>
+        <li data-i18n="ov.p2"></li>
+        <li data-i18n="ov.p3"></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 注册 ============ -->
+<section id="tab-register" style="display:none">
+  <div class="grid2">
+    <div class="card">
+      <h2><span class="step-tag" style="background:var(--blue)" data-i18n="reg.tag12"></span><span data-i18n="reg.h1"></span></h2>
+      <p class="muted" data-i18n="reg.hint"></p>
+      <label data-i18n="reg.name"></label>
+      <input id="regName" data-i18n-ph="reg.namePh">
+      <label data-i18n="reg.desc"></label>
+      <input id="regDesc" data-i18n-ph="reg.descPh">
+      <label data-i18n="reg.a2a"></label>
+      <input id="regA2A" data-i18n-ph="reg.a2aPh">
+      <label data-i18n="reg.mcp"></label>
+      <input id="regMCP" data-i18n-ph="reg.mcpPh">
+      <label data-i18n="reg.ens"></label>
+      <input id="regENS" data-i18n-ph="reg.ensPh">
+      <button class="btn btn-primary" id="regBtn" onclick="registerAgent()" data-i18n="reg.btn"></button>
+      <div id="regResult"></div>
+    </div>
+    <div class="card">
+      <h2><span class="step-tag" style="background:var(--blue)" data-i18n="reg.tag3"></span><span data-i18n="reg.h2"></span></h2>
+      <p class="muted" data-i18n="reg.hint2"></p>
+      <label data-i18n="reg.pickAgent"></label>
+      <select id="verifyOwnTarget"></select>
+      <button class="btn btn-ghost" onclick="simulateOwnershipProof()" data-i18n="reg.ownBtn"></button>
+      <div id="ownResult"></div>
+      <h3 data-i18n="reg.list"></h3>
+      <div id="regList" class="mono" style="font-size:12px;color:var(--muted)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 发现与委托 ============ -->
+<section id="tab-discover" style="display:none">
+  <div class="card">
+    <h2><span class="step-tag" style="background:var(--purple)" data-i18n="dis.tag"></span><span data-i18n="dis.h1"></span></h2>
+    <p class="muted" data-i18n="dis.hint"></p>
+    <div class="grid2" id="discoverList"></div>
+  </div>
+  <div class="card">
+    <h2><span class="step-tag" style="background:var(--purple)" data-i18n="task.tag"></span><span data-i18n="task.h1"></span></h2>
+    <div class="grid2">
+      <div>
+        <label data-i18n="task.pickAgent"></label>
+        <select id="taskAgent"></select>
+        <label data-i18n="task.type"></label>
+        <select id="taskType">
+          <option data-i18n="task.t1"></option>
+          <option data-i18n="task.t2"></option>
+          <option data-i18n="task.t3"></option>
+        </select>
+        <label data-i18n="task.risk"></label>
+        <select id="taskRisk">
+          <option value="low" data-i18n="task.low"></option>
+          <option value="high" data-i18n="task.high"></option>
+        </select>
+        <label data-i18n="task.custom"></label>
+        <input id="taskCustom" data-i18n-ph="task.customPh">
+        <button class="btn btn-purple" id="taskBtn" onclick="runTask()" data-i18n="task.btn"></button>
+        <div id="taskStatus"></div>
+      </div>
+      <div>
+        <h3 data-i18n="task.process"></h3>
+        <div id="taskLog"><div class="empty"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 反馈与验证 ============ -->
+<section id="tab-feedback" style="display:none">
+  <div class="grid2">
+    <div class="card">
+      <h2><span class="step-tag" style="background:var(--purple)" data-i18n="fb.tag"></span><span data-i18n="fb.h1"></span></h2>
+      <p class="muted" data-i18n="fb.hint"></p>
+      <label data-i18n="fb.agent"></label>
+      <select id="fbAgent"></select>
+      <label><span data-i18n="fb.value"></span><span id="fbVal" class="mono" style="color:var(--purple)">85</span></label>
+      <input type="range" id="fbRange" min="-100" max="100" value="85" oninput="document.getElementById('fbVal').textContent=this.value">
+      <label data-i18n="fb.note"></label>
+      <input id="fbNote" data-i18n-ph="fb.notePh">
+      <button class="btn btn-purple" onclick="giveFeedback()" data-i18n="fb.btn"></button>
+      <div id="fbResult"></div>
+    </div>
+    <div class="card">
+      <h2><span class="step-tag" style="background:var(--teal)" data-i18n="val.tag"></span><span data-i18n="val.h1"></span></h2>
+      <p class="muted" data-i18n="val.hint"></p>
+      <label data-i18n="val.agent"></label>
+      <select id="valAgent"></select>
+      <label data-i18n="val.method"></label>
+      <select id="valMethod">
+        <option value="TEE" data-i18n="val.tee"></option>
+        <option value="zkML" data-i18n="val.zkml"></option>
+        <option value="Re-exec" data-i18n="val.reexec"></option>
+      </select>
+      <button class="btn btn-teal" id="valBtn" onclick="requestValidation()" data-i18n="val.btn"></button>
+      <div id="valResult"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2><span class="step-tag" style="background:var(--teal)" data-i18n="rep.tag"></span><span data-i18n="rep.h1"></span></h2>
+    <p class="muted" data-i18n="rep.hint"></p>
+    <div style="overflow-x:auto"><table id="repTable"></table></div>
+  </div>
+</section>
+
+<!-- ============ Explorer ============ -->
+<section id="tab-explorer" style="display:none">
+  <div class="card">
+    <h2><span class="step-tag" style="background:var(--amber)" data-i18n="ex.tag"></span><span data-i18n="ex.h1"></span></h2>
+    <p class="muted" data-i18n="ex.hint"></p>
+    <div style="overflow-x:auto"><table id="txTable"></table></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* ================= 多语言 ================= */
+const I18N = {
+  zh: {
+    'app.title':'ERC-8004 实操演示',
+    'app.sub':'Trustless Agents — 链上智能体信任层',
+    'app.sub2':'模拟环境 · 三个注册表：IdentityRegistry / ReputationRegistry / ValidationRegistry',
+    'app.reset':'重置演示数据',
+    'lang.self':'English',
+    'tab.overview':'总览 · 演示脚本',
+    'tab.register':'① 注册 Agent（运营方）',
+    'tab.discover':'② 发现与委托（使用方）',
+    'tab.feedback':'③ 反馈与验证',
+    'tab.explorer':'④ 链上账本（Explorer）',
+    'ov.tag':'说明','ov.h':'这个演示在做什么',
+    'ov.text':'本页面模拟了 ERC-8004 标准的核心机制：<b>身份注册表</b>（ERC-721 智能体身份）、<b>声誉注册表</b>（标准化反馈信号）、<b>验证注册表</b>（可插拔独立验证）。所有"交易"都记录在下方的模拟链账本中，任务执行（A2A/MCP）则模拟为<b>链下行为</b>——这正是 ERC-8004 的设计：链上只存信任信号，通信与支付发生在标准之外。',
+    'ov.hint':'演讲提示：演示顺序建议 ①注册 → ②发现与委托 → ③反馈与验证，每一步完成后切到 ④账本页面看"链上发生了什么"。',
+    'ov.scriptTag':'脚本','ov.scriptH':'现场演示步骤',
+    'ov.s1':'<b>注册</b>（约 1 分钟）：在「① 注册 Agent」填写名称和端点，点击铸造 → 得到 agentId 和模拟 IPFS 的 agentURI，切到账本看 <span class="mono" style="color:var(--blue)">Register</span> 事件。',
+    'ov.s2':'<b>发现</b>：在「② 发现与委托」点开智能体的注册文件，展示 JSON 结构（A2A 卡 / MCP 端点 / ENS），解释"使用方就是这样发现智能体的"。',
+    'ov.s3':'<b>委托</b>：选一个智能体执行任务——<b>故意选"高风险：资金操作"</b>，观察系统提示需要独立验证。',
+    'ov.s4':'<b>反馈</b>：任务完成后在「③ 反馈与验证」提交反馈（拖动滑块），账本出现 <span class="mono" style="color:var(--purple)">GiveFeedback</span> 事件。',
+    'ov.s5':'<b>验证</b>：请求独立验证（选 TEE 或 zkML），等待几秒 → 验证者返回 0-100 分，账本出现 <span class="mono" style="color:var(--teal)">ValidationRequest / ValidationResponse</span>。',
+    'ov.s6':'<b>收尾</b>：回到「② 发现与委托」，展示该智能体的声誉分数已经变化——"链上履历"就是这样积累的。',
+    'ov.dataTag':'数据','ov.chainH':'当前链上状态',
+    'ov.ptsTag':'要点','ov.ptsH':'讲解时强调的三个设计',
+    'ov.p1':'<b>链上存指针、链下存内容</b>：注册表只存 agentURI，大文件在 IPFS。',
+    'ov.p2':'<b>声誉只存信号、不存评分</b>：市场/保险各自读同样的信号算自己的分（见智能体卡片上的两种评分）。',
+    'ov.p3':'<b>任务在链下、信任在链上</b>：A2A/MCP 通信不产生交易，只有信任信号上链。',
+    'reg.tag12':'第 1-2 步','reg.h1':'注册智能体身份',
+    'reg.hint':'运营方填写注册文件内容 → 系统模拟生成 IPFS CID → 调用 IdentityRegistry.register() 铸造 ERC-721 身份。',
+    'reg.name':'智能体名称','reg.namePh':'例如：DataBot 价格分析器',
+    'reg.desc':'一句话描述','reg.descPh':'例如：提供实时加密货币行情与分析报告',
+    'reg.a2a':'A2A Agent Card 端点','reg.a2aPh':'https://bot.example/.well-known/agent-card',
+    'reg.mcp':'MCP 端点','reg.mcpPh':'https://bot.example/mcp',
+    'reg.ens':'ENS 名称（可选）','reg.ensPh':'databot.eth',
+    'reg.btn':'铸造身份（register）',
+    'reg.tag3':'第 3 步','reg.h2':'所有权签名验证（可选）',
+    'reg.hint2':'用 EIP-712 签名证明运营方控制声明的 ENS 域名或钱包（agentWallet），防止他人冒名注册端点。下面模拟一次域名所有权验证。',
+    'reg.pickAgent':'选择要验证的智能体',
+    'reg.ownBtn':'模拟 EIP-712 域名验证',
+    'reg.list':'已注册的智能体',
+    'reg.needName':'请填写智能体名称',
+    'reg.mintOk':'<b>铸造成功</b> — agentId = {id}',
+    'reg.globalId':'全局标识',
+    'reg.empty':'（空）',
+    'reg.ownOk':'域名 <b>{ens}</b> 所有权验证通过（模拟 EIP-712 签名）',
+    'dis.tag':'第 4 步','dis.h1':'发现：解析注册记录，比较候选智能体',
+    'dis.hint':'使用方查询注册表 → 解析每个 agentURI → 对比能力、端点与声誉。点击卡片可展开注册文件（模拟 IPFS JSON）。',
+    'dis.verified':'域名已验证','dis.unverified':'未验证',
+    'dis.valN':'已验证 {n} 次','dis.noVal':'无验证记录',
+    'dis.market':'市场评分<br>(反馈均值)',
+    'dis.ins':'保险信任分<br>(验证+反馈)',
+    'dis.fbCount':'反馈<br>次数',
+    'dis.viewFile':'查看注册文件 agentURI（模拟 IPFS）',
+    'dis.empty':'还没有智能体，先去「① 注册 Agent」',
+    'task.tag':'第 5 步','task.h1':'委托任务（A2A / MCP，链下执行）',
+    'task.pickAgent':'选择智能体','task.type':'任务类型',
+    'task.t1':'查询 BTC/ETH 最新行情',
+    'task.t2':'生成投资组合分析报告',
+    'task.t3':'监控异常价格波动并预警',
+    'task.risk':'风险级别',
+    'task.custom':'自定义任务（可选，填了则不用上面选的类型）',
+    'task.customPh':'例如：帮我把这份销售数据按月汇总成报表',
+    'task.low':'低风险（只读查询）','task.high':'高风险（涉及资金操作）',
+    'task.btn':'通过 A2A 下发任务',
+    'task.process':'执行过程','task.empty':'尚未执行任务',
+    'task.s1':'A2A 握手完成 — 已解析 {agent} 的 Agent Card',
+    'task.s2':'任务已下发: {task}',
+    'task.s3':'智能体执行中（MCP 工具调用）…',
+    'task.doneHigh':'任务完成 — 但这是高风险操作！<br>→ ERC-8004 建议请求独立验证后再采信结果（切到「③ 反馈与验证」）',
+    'task.doneLow':'任务完成 ✓ 低风险任务无需独立验证，可直接提交反馈',
+    'task.offchain':'注意：以上通信全部发生在<b>链下</b>（A2A/MCP），链上账本中不会出现任何交易——信任信号才上链。',
+    'fb.tag':'第 6 步','fb.h1':'提交声誉反馈',
+    'fb.hint':'任务完成后，使用方在声誉注册表提交反馈：带符号 int128 数值 + 可选证据文件。信号以链上事件公开。',
+    'fb.agent':'选择智能体','fb.value':'反馈值：',
+    'fb.note':'评价备注（存入链下证据文件）','fb.notePh':'例如：任务按时完成，数据准确',
+    'fb.btn':'giveFeedback() 上链',
+    'fb.ok':'反馈已上链 ✓',
+    'val.tag':'第 7 步','val.h1':'请求独立验证（高风险场景）',
+    'val.hint':'验证者可以是 TEE 可信执行环境、zkML 证明或质押重执行。响应为 0-100 分，任何人可查。',
+    'val.agent':'选择智能体','val.method':'验证方式',
+    'val.tee':'TEE 可信执行环境（如 Intel TDX）',
+    'val.zkml':'zkML 零知识机器学习证明',
+    'val.reexec':'质押担保重执行',
+    'val.btn':'发起 ValidationRequest',
+    'val.pending':'验证请求已上链，等待验证者响应…',
+    'val.ok':'验证完成 ✓',
+    'val.threshold':'verifier={method} · 中等偏高风险场景采信门槛通常 ≥ 90',
+    'val.slash':' / 100',
+    'rep.tag':'第 8 步','rep.h1':'声誉面板：同一信号，两种评分',
+    'rep.hint':'市场按反馈均值排序；保险方按"验证分数 + 反馈"计算风险信任分。数据相同，模型不同——这就是可组合性。',
+    'rep.thAgent':'智能体','rep.thFb':'反馈次数',
+    'rep.thMarket':'市场评分','rep.thMarketSub':'= 反馈均值',
+    'rep.thVal':'验证分',
+    'rep.thIns':'保险信任分','rep.thInsSub':'= 0.6×验证 + 0.4×反馈',
+    'rep.noSignal':'无信号','rep.unverified':'未验证',
+    'rep.needVal':'需要验证数据','rep.noAgents':'暂无智能体',
+    'ex.tag':'账本','ex.h1':'模拟链事件日志',
+    'ex.hint':'ERC-8004 的三类注册表通过这些事件暴露信任信号。注意：A2A 任务执行<b>不会</b>出现在这里——它发生在链下。',
+    'ex.thBlock':'区块','ex.thHash':'交易哈希','ex.thEvent':'事件','ex.thData':'数据',
+    'ex.ownership':'EIP-712 签名验证',
+    'cs.block':'区块高度','cs.agents':'注册智能体','cs.fb':'反馈事件','cs.val':'验证事件',
+    'chain.badge':'模拟链 · 区块 #{block} · {n} 个智能体',
+    'seed.oracle.desc':'实时加密货币行情预言机',
+    'seed.oracle.note1':'数据延迟低于 200ms','seed.oracle.note2':'接口稳定',
+    'seed.trade.desc':'自动化交易执行智能体',
+    'seed.trade.note1':'执行速度快','seed.trade.note2':'有一次滑点偏大'
+  },
+  en: {
+    'app.title':'ERC-8004 Live Demo',
+    'app.sub':'Trustless Agents — On-chain Trust Layer for AI Agents',
+    'app.sub2':'Simulated environment · Three registries: IdentityRegistry / ReputationRegistry / ValidationRegistry',
+    'app.reset':'Reset demo data',
+    'lang.self':'中文',
+    'tab.overview':'Overview · Demo Script',
+    'tab.register':'① Register Agent (Operator)',
+    'tab.discover':'② Discover & Delegate (Client)',
+    'tab.feedback':'③ Feedback & Validation',
+    'tab.explorer':'④ On-chain Ledger (Explorer)',
+    'ov.tag':'About','ov.h':'What this demo does',
+    'ov.text':'This page simulates the core mechanics of ERC-8004: the <b>Identity Registry</b> (ERC-721 agent identity), the <b>Reputation Registry</b> (standardized feedback signals) and the <b>Validation Registry</b> (pluggable independent validation). All "transactions" are recorded in the simulated chain ledger below, while task execution (A2A/MCP) is modeled as an <b>off-chain</b> action — this is exactly the ERC-8004 design: only trust signals live on-chain; communication and payments happen outside the standard.',
+    'ov.hint':'Presenter tip: suggested flow ① Register → ② Discover & Delegate → ③ Feedback & Validation. After each step, switch to ④ the ledger to show "what happened on-chain".',
+    'ov.scriptTag':'Script','ov.scriptH':'Live demo steps',
+    'ov.s1':'<b>Register</b> (~1 min): fill in name and endpoints on "① Register Agent", click Mint → get an agentId and a simulated IPFS agentURI, then check the <span class="mono" style="color:var(--blue)">Register</span> event in the ledger.',
+    'ov.s2':'<b>Discover</b>: on "② Discover & Delegate" open an agent\'s registration file, show the JSON structure (A2A card / MCP endpoint / ENS) and explain "this is how clients discover agents".',
+    'ov.s3':'<b>Delegate</b>: run a task — <b>deliberately pick "High risk: funds involved"</b> and watch the system require independent validation.',
+    'ov.s4':'<b>Feedback</b>: after the task, submit feedback on "③ Feedback & Validation" (drag the slider) — a <span class="mono" style="color:var(--purple)">GiveFeedback</span> event appears in the ledger.',
+    'ov.s5':'<b>Validate</b>: request independent validation (pick TEE or zkML), wait a few seconds → the verifier returns a 0–100 score; see <span class="mono" style="color:var(--teal)">ValidationRequest / ValidationResponse</span> in the ledger.',
+    'ov.s6':'<b>Wrap up</b>: return to "② Discover & Delegate" and show that the agent\'s reputation has changed — this is how the on-chain track record accumulates.',
+    'ov.dataTag':'Data','ov.chainH':'Current on-chain state',
+    'ov.ptsTag':'Key Points','ov.ptsH':'Three design points to emphasize',
+    'ov.p1':'<b>Pointers on-chain, content off-chain</b>: the registry stores only the agentURI; large files live on IPFS.',
+    'ov.p2':'<b>Reputation stores signals, not scores</b>: markets and insurers read the same signals and compute their own scores (see the two scores on each agent card).',
+    'ov.p3':'<b>Tasks off-chain, trust on-chain</b>: A2A/MCP communication creates no transactions — only trust signals go on-chain.',
+    'reg.tag12':'Steps 1–2','reg.h1':'Register an agent identity',
+    'reg.hint':'The operator fills in the registration file → a simulated IPFS CID is generated → IdentityRegistry.register() mints an ERC-721 identity.',
+    'reg.name':'Agent name','reg.namePh':'e.g. DataBot Price Analyzer',
+    'reg.desc':'One-line description','reg.descPh':'e.g. Real-time crypto market data and analysis reports',
+    'reg.a2a':'A2A Agent Card endpoint','reg.a2aPh':'https://bot.example/.well-known/agent-card',
+    'reg.mcp':'MCP endpoint','reg.mcpPh':'https://bot.example/mcp',
+    'reg.ens':'ENS name (optional)','reg.ensPh':'databot.eth',
+    'reg.btn':'Mint identity (register)',
+    'reg.tag3':'Step 3','reg.h2':'Ownership signature verification (optional)',
+    'reg.hint2':'Sign with EIP-712 to prove control of the declared ENS name or wallet (agentWallet), preventing endpoint spoofing. A simulated domain verification is shown below.',
+    'reg.pickAgent':'Select agent to verify',
+    'reg.ownBtn':'Simulate EIP-712 domain verification',
+    'reg.list':'Registered agents',
+    'reg.needName':'Please enter an agent name',
+    'reg.mintOk':'<b>Minted</b> — agentId = {id}',
+    'reg.globalId':'Global identifier',
+    'reg.empty':'(empty)',
+    'reg.ownOk':'Domain <b>{ens}</b> ownership verified (simulated EIP-712 signature)',
+    'dis.tag':'Step 4','dis.h1':'Discover: parse records, compare candidate agents',
+    'dis.hint':'The client queries the registry → resolves each agentURI → compares capabilities, endpoints and reputation. Click a card to expand the registration file (simulated IPFS JSON).',
+    'dis.verified':'Domain verified','dis.unverified':'Unverified',
+    'dis.valN':'Validated ×{n}','dis.noVal':'No validation',
+    'dis.market':'Market score<br>(feedback avg)',
+    'dis.ins':'Insurance trust<br>(validation+feedback)',
+    'dis.fbCount':'Feedback<br>count',
+    'dis.viewFile':'View registration file agentURI (simulated IPFS)',
+    'dis.empty':'No agents yet — go to "① Register Agent"',
+    'task.tag':'Step 5','task.h1':'Delegate a task (A2A / MCP, off-chain)',
+    'task.pickAgent':'Select agent','task.type':'Task type',
+    'task.t1':'Fetch latest BTC/ETH market data',
+    'task.t2':'Generate portfolio analysis report',
+    'task.t3':'Monitor abnormal volatility and alert',
+    'task.risk':'Risk level',
+    'task.custom':'Custom task (optional — overrides the selected type)',
+    'task.customPh':'e.g. summarize this sales CSV into a monthly report',
+    'task.low':'Low risk (read-only query)','task.high':'High risk (funds involved)',
+    'task.btn':'Dispatch via A2A',
+    'task.process':'Execution log','task.empty':'No task executed yet',
+    'task.s1':'A2A handshake done — parsed Agent Card of {agent}',
+    'task.s2':'Task dispatched: {task}',
+    'task.s3':'Agent executing (MCP tool calls)…',
+    'task.doneHigh':'Task completed — but this is a high-risk operation!<br>→ ERC-8004 recommends independent validation before trusting the result (go to "③ Feedback & Validation")',
+    'task.doneLow':'Task completed ✓ Low risk — no validation needed, feedback can be submitted directly',
+    'task.offchain':'Note: all communication above happens <b>off-chain</b> (A2A/MCP); no transactions appear in the ledger — only trust signals go on-chain.',
+    'fb.tag':'Step 6','fb.h1':'Submit reputation feedback',
+    'fb.hint':'After a task, the client submits feedback to the reputation registry: a signed int128 value + optional evidence file. Signals are public via on-chain events.',
+    'fb.agent':'Select agent','fb.value':'Feedback value: ',
+    'fb.note':'Comment (stored in off-chain evidence file)','fb.notePh':'e.g. Completed on time, data accurate',
+    'fb.btn':'giveFeedback() on-chain',
+    'fb.ok':'Feedback recorded ✓',
+    'val.tag':'Step 7','val.h1':'Request independent validation (high-risk)',
+    'val.hint':'Verifiers can be a TEE, zkML proofs, or staked re-execution. Responses score 0–100 and are publicly queryable.',
+    'val.agent':'Select agent','val.method':'Verification method',
+    'val.tee':'TEE trusted execution (e.g. Intel TDX)',
+    'val.zkml':'zkML zero-knowledge ML proof',
+    'val.reexec':'Staked re-execution',
+    'val.btn':'Send ValidationRequest',
+    'val.pending':'Validation request on-chain, waiting for verifier…',
+    'val.ok':'Validation complete ✓',
+    'val.threshold':'verifier={method} · acceptance threshold usually ≥ 90 for medium/high risk',
+    'val.slash':' / 100',
+    'rep.tag':'Step 8','rep.h1':'Reputation panel: same signals, two scoring models',
+    'rep.hint':'Markets rank by feedback average; insurers compute a trust score from validation + feedback. Same data, different models — that is composability.',
+    'rep.thAgent':'Agent','rep.thFb':'Feedbacks',
+    'rep.thMarket':'Market score','rep.thMarketSub':'= feedback avg',
+    'rep.thVal':'Validation',
+    'rep.thIns':'Insurance trust','rep.thInsSub':'= 0.6×validation + 0.4×feedback',
+    'rep.noSignal':'No signal','rep.unverified':'Unverified',
+    'rep.needVal':'Needs validation data','rep.noAgents':'No agents',
+    'ex.tag':'Ledger','ex.h1':'Simulated chain event log',
+    'ex.hint':'The three ERC-8004 registries expose trust signals via these events. Note: A2A task execution <b>does not</b> appear here — it happens off-chain.',
+    'ex.thBlock':'Block','ex.thHash':'Tx hash','ex.thEvent':'Event','ex.thData':'Data',
+    'ex.ownership':'EIP-712 signature verification',
+    'cs.block':'Block height','cs.agents':'Registered agents','cs.fb':'Feedback events','cs.val':'Validation events',
+    'chain.badge':'Simulated chain · Block #{block} · {n} agents',
+    'seed.oracle.desc':'Real-time crypto market oracle',
+    'seed.oracle.note1':'Data latency under 200ms','seed.oracle.note2':'Stable API',
+    'seed.trade.desc':'Automated trade execution agent',
+    'seed.trade.note1':'Fast execution','seed.trade.note2':'One trade had excessive slippage'
+  }
+};
+
+let LANG = localStorage.getItem('erc8004_demo_lang') || 'zh';
+
+function t(key, vars){
+  let s = (I18N[LANG] && I18N[LANG][key]) || I18N.zh[key] || key;
+  if(vars) for(const k in vars) s = s.split('{' + k + '}').join(vars[k]);
+  return s;
+}
+
+function applyStatic(){
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : 'en';
+  document.title = t('app.title') + ' · Trustless Agents';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  document.getElementById('langBtn').textContent = t('lang.self');
+}
+
+function switchLang(){
+  LANG = LANG === 'zh' ? 'en' : 'zh';
+  localStorage.setItem('erc8004_demo_lang', LANG);
+  applyStatic();
+  renderAll();
+}
+
+/* ================= 状态与持久化 ================= */
+const LS_KEY = 'erc8004_demo_v1';
+let state = null;
+
+function mockHash(){ let s='0x'; const c='0123456789abcdef'; for(let i=0;i<40;i++) s+=c[Math.floor(Math.random()*16)]; return s; }
+function mockCID(){ const c='abcdefghijklmnopqrstuvwxyz234567'; let s='bafybei'; for(let i=0;i<26;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+function mockAddr(){ let s='0x'; const c='0123456789abcdef'; for(let i=0;i<40;i++) s+=c[Math.floor(Math.random()*16)]; return s; }
+const CLIENT = '0xA11cE0000000000000000000000000000000c0dE';
+
+function seedState(){
+  return {
+    block: 8,
+    agents: [
+      { id:1, name:'PriceOracle Bot', descKey:'seed.oracle.desc', owner:mockAddr(),
+        cid:mockCID(), endpoints:{a2a:'https://oracle.example/.well-known/agent-card', mcp:'https://oracle.example/mcp', ens:'oracle.eth'},
+        verified:true,
+        feedbacks:[{client:CLIENT,value:95,noteKey:'seed.oracle.note1',ts:Date.now()-86400000*3},{client:mockAddr(),value:88,noteKey:'seed.oracle.note2',ts:Date.now()-86400000*2}],
+        validations:[{method:'TEE',score:92,ts:Date.now()-86400000*2}] },
+      { id:2, name:'TradeExecutor', descKey:'seed.trade.desc', owner:mockAddr(),
+        cid:mockCID(), endpoints:{a2a:'https://trade.example/.well-known/agent-card', mcp:'https://trade.example/mcp', ens:'trade-x.eth'},
+        verified:false,
+        feedbacks:[{client:mockAddr(),value:76,noteKey:'seed.trade.note1',ts:Date.now()-86400000*5},{client:mockAddr(),value:64,noteKey:'seed.trade.note2',ts:Date.now()-86400000}],
+        validations:[] }
+    ],
+    txs: [
+      {block:3,hash:mockHash(),ev:'Register',data:'agentId=1 · PriceOracle Bot'},
+      {block:4,hash:mockHash(),ev:'Register',data:'agentId=2 · TradeExecutor'},
+      {block:5,hash:mockHash(),ev:'GiveFeedback',data:'agentId=1 · value=95'},
+      {block:6,hash:mockHash(),ev:'GiveFeedback',data:'agentId=1 · value=88'},
+      {block:7,hash:mockHash(),ev:'ValidationResponse',data:'agentId=1 · TEE · score=92'},
+      {block:8,hash:mockHash(),ev:'GiveFeedback',data:'agentId=2 · value=76'}
+    ]
+  };
+}
+function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)); }catch(e){ return null; } }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function resetAll(){ if(confirm(LANG==='zh' ? '确定重置全部演示数据吗？' : 'Reset all demo data?')){ localStorage.removeItem(LS_KEY); state = seedState(); save(); renderAll(); } }
+
+state = load() || seedState(); save();
+
+function agentDesc(a){ return a.descKey ? t(a.descKey) : a.desc; }
+
+/* ================= 链上动作（模拟） ================= */
+function tx(ev, data){ state.block++; state.txs.unshift({block:state.block, hash:mockHash(), ev, data}); save(); }
+
+function registerAgent(){
+  const name = document.getElementById('regName').value.trim();
+  if(!name){ alert(t('reg.needName')); return; }
+  const cid = mockCID();
+  const a = {
+    id: state.agents.length + 1,
+    name, desc: document.getElementById('regDesc').value.trim() || '—',
+    owner: mockAddr(), cid,
+    endpoints:{ a2a: document.getElementById('regA2A').value.trim()||'https://pending.example/agent-card',
+                mcp: document.getElementById('regMCP').value.trim()||'https://pending.example/mcp',
+                ens: document.getElementById('regENS').value.trim()||'' },
+    verified:false, feedbacks:[], validations:[]
+  };
+  state.agents.push(a);
+  tx('Register', 'agentId=' + a.id + ' · ' + name);
+  save();
+  document.getElementById('regResult').innerHTML =
+    '<div class="success fade-in">' + t('reg.mintOk',{id:a.id}) + '<br>' +
+    '<span class="mono" style="font-size:11.5px">agentURI: ipfs://' + cid + '/agent.json</span><br>' +
+    '<span class="mono" style="font-size:11.5px">' + t('reg.globalId') + ': eip155:11155111:0x8004Registry:' + a.id + '</span></div>' +
+    nftCardHTML(a);
+  renderAll();
+}
+
+function nftCardHTML(a){
+  return '<div class="nft fade-in"><div style="display:flex;justify-content:space-between;align-items:center">' +
+    '<span class="badge b-blue">ERC-721 · IdentityRegistry</span>' +
+    '<span class="mono" style="font-size:11px;color:var(--muted)">Token #' + a.id + '</span></div>' +
+    '<div style="font-size:16px;font-weight:600;margin:6px 0">' + a.name + '</div>' +
+    '<div class="muted">' + agentDesc(a) + '</div>' +
+    '<div class="kv" style="margin-top:8px"><b>owner</b>: <span class="hash">' + a.owner.slice(0,10) + '…' + a.owner.slice(-4) + '</span></div>' +
+    '<div class="kv"><b>agentURI</b>: <span class="hash">ipfs://' + a.cid.slice(0,14) + '…/agent.json</span></div></div>';
+}
+
+function simulateOwnershipProof(){
+  const id = +document.getElementById('verifyOwnTarget').value;
+  const a = state.agents.find(x=>x.id===id); if(!a) return;
+  tx('OwnershipProof', 'agentId=' + id + ' · ' + t('ex.ownership'));
+  a.verified = true; save();
+  document.getElementById('ownResult').innerHTML =
+    '<div class="success fade-in">' + t('reg.ownOk',{ens:a.endpoints.ens||'example.eth'}) + '</div>';
+  renderAll();
+}
+
+/* ================= 发现与委托 ================= */
+function agentJSON(a){
+  return JSON.stringify({
+    name: a.name, description: agentDesc(a),
+    endpoints: a.endpoints, verified: a.verified,
+    reputationRef: 'eip155:11155111:ReputationRegistry',
+    validationRef: 'eip155:11155111:ValidationRegistry'
+  }, null, 2);
+}
+
+function scoresOf(a){
+  const fb = a.feedbacks.length ? a.feedbacks.reduce((s,f)=>s+f.value,0)/a.feedbacks.length : null;
+  const val = a.validations.length ? a.validations.reduce((s,v)=>s+v.score,0)/a.validations.length : null;
+  const ins = (val!==null && fb!==null) ? Math.round(val*0.6 + (fb+100)/2*0.4) : null;
+  return {fb, val, ins};
+}
+
+function discoverHTML(a){
+  const s = scoresOf(a);
+  return '<div class="agent-card">' +
+    '<div style="display:flex;justify-content:space-between;align-items:start"><b style="font-size:14.5px">' + a.name + '</b>' +
+    '<span class="mono" style="font-size:11px;color:var(--faint)">#' + a.id + '</span></div>' +
+    '<div class="muted" style="margin:4px 0">' + agentDesc(a) + '</div>' +
+    '<div>' + (a.verified?'<span class="badge b-teal">'+t('dis.verified')+'</span>':'<span class="badge b-gray">'+t('dis.unverified')+'</span>') +
+    (a.validations.length?'<span class="badge b-amber">'+t('dis.valN',{n:a.validations.length})+'</span>':'<span class="badge b-coral">'+t('dis.noVal')+'</span>') + '</div>' +
+    '<div class="stat-row"><div class="stat"><b>' + (s.fb===null?'—':s.fb.toFixed(1)) + '</b><span class="muted">'+t('dis.market')+'</span></div>' +
+    '<div class="stat"><b>' + (s.ins===null?'—':s.ins) + '</b><span class="muted">'+t('dis.ins')+'</span></div>' +
+    '<div class="stat"><b>' + a.feedbacks.length + '</b><span class="muted">'+t('dis.fbCount')+'</span></div></div>' +
+    '<details><summary class="muted" style="cursor:pointer;font-size:12.5px">'+t('dis.viewFile')+'</summary>' +
+    '<pre class="json" style="margin-top:8px">ipfs://' + a.cid + '/agent.json\n\n' + agentJSON(a) + '</pre></details>' +
+    '</div>';
+}
+
+function runTask(){
+  const id = +document.getElementById('taskAgent').value;
+  const a = state.agents.find(x=>x.id===id); if(!a) return;
+  const type = document.getElementById('taskCustom').value.trim() || document.getElementById('taskType').value;
+  const risk = document.getElementById('taskRisk').value;
+  const btn = document.getElementById('taskBtn'); btn.disabled = true;
+  const log = document.getElementById('taskLog'); log.innerHTML = '';
+  const steps = [
+    ['info', t('task.s1',{agent:a.name})],
+    ['info', t('task.s2',{task:type})],
+    ['warn', t('task.s3')]
+  ];
+  let i = 0;
+  const timer = setInterval(()=>{
+    if(i < steps.length){
+      const s = steps[i++];
+      log.innerHTML += '<div class="status-line ' + s[0] + '">' + s[1] + '</div>';
+    } else {
+      clearInterval(timer); btn.disabled = false;
+      if(risk === 'high'){
+        log.innerHTML += '<div class="status-line warn">' + t('task.doneHigh') + '</div>';
+      } else {
+        log.innerHTML += '<div class="status-line ok">' + t('task.doneLow') + '</div>';
+      }
+      log.innerHTML += '<div class="hint" style="margin-top:10px">' + t('task.offchain') + '</div>';
+      window.lastTask = {agentId:id, type, risk, ts:Date.now()};
+    }
+  }, 900);
+}
+
+/* ================= 反馈与验证 ================= */
+function giveFeedback(){
+  const id = +document.getElementById('fbAgent').value;
+  const a = state.agents.find(x=>x.id===id); if(!a) return;
+  const v = +document.getElementById('fbRange').value;
+  const note = document.getElementById('fbNote').value.trim() || '—';
+  const ecid = mockCID();
+  a.feedbacks.push({client:CLIENT, value:v, note, ts:Date.now()});
+  tx('GiveFeedback', 'agentId=' + id + ' · value=' + v + ' · evidence=ipfs://' + ecid.slice(0,10) + '…');
+  save();
+  document.getElementById('fbResult').innerHTML =
+    '<div class="success fade-in">' + t('fb.ok') + '<br><span class="mono" style="font-size:11.5px">giveFeedback(agentId=' + id + ', value=' + v + ', valueDecimals=0, fileURI="ipfs://' + ecid + '/review.json")</span></div>';
+  renderAll();
+}
+
+function requestValidation(){
+  const id = +document.getElementById('valAgent').value;
+  const a = state.agents.find(x=>x.id===id); if(!a) return;
+  const method = document.getElementById('valMethod').value;
+  const btn = document.getElementById('valBtn'); btn.disabled = true;
+  tx('ValidationRequest', 'agentId=' + id + ' · method=' + method);
+  save();
+  const box = document.getElementById('valResult');
+  box.innerHTML = '<div class="status-line info fade-in">' + t('val.pending') + '</div>';
+  setTimeout(()=>{
+    const score = 80 + Math.floor(Math.random()*19); // 80-98
+    a.validations.push({method, score, ts:Date.now()});
+    tx('ValidationResponse', 'agentId=' + id + ' · ' + method + ' · score=' + score);
+    save();
+    box.innerHTML = '<div class="success fade-in">' + t('val.ok') + '<br><div class="score-big" style="color:var(--teal)">' + score + '<span style="font-size:14px;color:var(--muted)">' + t('val.slash') + '</span></div>' +
+      '<span class="mono" style="font-size:11.5px">' + t('val.threshold',{method:method}) + '</span></div>';
+    btn.disabled = false;
+    renderAll();
+  }, 1800);
+}
+
+/* ================= 渲染 ================= */
+function fillSelect(id, list, labelFn){
+  const el = document.getElementById(id);
+  const cur = el.value;
+  el.innerHTML = list.map(a=>'<option value="' + a.id + '">' + (labelFn?labelFn(a):a.id + ' · ' + a.name) + '</option>').join('');
+  if(cur && list.some(a=>a.id==cur)) el.value = cur;
+}
+
+function renderRepTable(){
+  const t_ = document.getElementById('repTable');
+  if(!state.agents.length){ t_.innerHTML = '<tr><td class="empty">'+t('rep.noAgents')+'</td></tr>'; return; }
+  t_.innerHTML = '<tr><th>'+t('rep.thAgent')+'</th><th>'+t('rep.thFb')+'</th><th>'+t('rep.thMarket')+'<br><span style="font-size:11px">'+t('rep.thMarketSub')+'</span></th><th>'+t('rep.thVal')+'</th><th>'+t('rep.thIns')+'<br><span style="font-size:11px">'+t('rep.thInsSub')+'</span></th></tr>' +
+    state.agents.map(a=>{
+      const s = scoresOf(a);
+      return '<tr><td><b>' + a.name + '</b> <span class="mono" style="color:var(--faint)">#' + a.id + '</span></td>' +
+        '<td>' + a.feedbacks.length + '</td>' +
+        '<td>' + (s.fb===null?'<span class="muted">'+t('rep.noSignal')+'</span>':'<b style="color:' + (s.fb>=80?'var(--teal)':s.fb>=60?'var(--amber)':'var(--red)') + '">' + s.fb.toFixed(1) + '</b>') + '</td>' +
+        '<td>' + (s.val===null?'<span class="muted">'+t('rep.unverified')+'</span>':s.val.toFixed(0)) + '</td>' +
+        '<td>' + (s.ins===null?'<span class="muted">'+t('rep.needVal')+'</span>':'<b>' + s.ins + '</b>') + '</td></tr>';
+    }).join('');
+}
+
+function renderExplorer(){
+  const t_ = document.getElementById('txTable');
+  t_.innerHTML = '<tr><th>'+t('ex.thBlock')+'</th><th>'+t('ex.thHash')+'</th><th>'+t('ex.thEvent')+'</th><th>'+t('ex.thData')+'</th></tr>' +
+    state.txs.map(x=>{
+      const color = x.ev.startsWith('Reg')?'var(--blue)':x.ev.startsWith('Give')?'var(--purple)':'var(--teal)';
+      return '<tr><td class="mono">#' + x.block + '</td>' +
+        '<td><span class="hash">' + x.hash.slice(0,12) + '…' + x.hash.slice(-4) + '</span></td>' +
+        '<td><span class="ev" style="color:' + color + '">' + x.ev + '</span></td>' +
+        '<td class="mono" style="font-size:11.5px">' + x.data + '</td></tr>';
+    }).join('');
+}
+
+function renderAll(){
+  document.getElementById('chainStat').textContent = t('chain.badge',{block:state.block, n:state.agents.length});
+  document.getElementById('chainSummary').innerHTML =
+    '<div class="stat-row" style="gap:30px">' +
+    '<div class="stat"><b>' + state.block + '</b><span class="muted">'+t('cs.block')+'</span></div>' +
+    '<div class="stat"><b>' + state.agents.length + '</b><span class="muted">'+t('cs.agents')+'</span></div>' +
+    '<div class="stat"><b>' + state.txs.filter(x=>x.ev==='GiveFeedback').length + '</b><span class="muted">'+t('cs.fb')+'</span></div>' +
+    '<div class="stat"><b>' + state.txs.filter(x=>x.ev==='ValidationResponse').length + '</b><span class="muted">'+t('cs.val')+'</span></div></div>';
+  fillSelect('verifyOwnTarget', state.agents);
+  fillSelect('taskAgent', state.agents);
+  fillSelect('fbAgent', state.agents);
+  fillSelect('valAgent', state.agents);
+  document.getElementById('discoverList').innerHTML = state.agents.map(discoverHTML).join('') || '<div class="empty">'+t('dis.empty')+'</div>';
+  document.getElementById('regList').innerHTML = state.agents.map(a=>'#' + a.id + ' ' + a.name + (a.verified?' ✓':'')).join('<br>') || t('reg.empty');
+  renderRepTable();
+  renderExplorer();
+}
+
+/* ================= 标签页 ================= */
+document.querySelectorAll('#tabs button').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    ['overview','register','discover','feedback','explorer'].forEach(tp=>{
+      document.getElementById('tab-' + tp).style.display = tp===b.dataset.tab ? '' : 'none';
+    });
+  };
+});
+
+applyStatic();
+renderAll();
+</script>
+</body>
+</html>

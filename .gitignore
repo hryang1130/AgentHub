@@ -1,0 +1,15 @@
+# 私钥绝不入库（Sepolia 测试网演示钱包）
+agent-platform/sepolia/.env
+*.env
+
+# 运行时数据（演示状态、实例 ID）
+agent-platform/data/
+agent-platform/agents/data/
+
+# 依赖
+node_modules/
+package-lock.json
+
+# 系统文件
+Thumbs.db
+.DS_Store

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentHub · 本地智能体注册与交易平台</title>
+<style>
+  :root{--bg:#F7F7F4;--card:#FFF;--border:#E3E1D9;--border2:#C9C7BD;--text:#2C2C2A;--muted:#6E6D66;--faint:#9C9B93;
+    --blue:#185FA5;--blue-bg:#E6F1FB;--purple:#534AB7;--purple-bg:#EEEDFE;--teal:#0F6E56;--teal-bg:#E1F5EE;
+    --amber:#854F0B;--amber-bg:#FAEEDA;--red:#A32D2D;--mono:ui-monospace,Consolas,monospace}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+  header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header h1{font-size:17px;font-weight:600}
+  header .sub{font-size:12px;color:var(--muted)}
+  .chain-badge{display:inline-flex;align-items:center;gap:6px;background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);border-radius:20px;padding:3px 12px;font-size:12px;font-family:var(--mono)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  nav{display:flex;gap:4px;background:var(--card);border-bottom:1px solid var(--border);padding:0 24px}
+  nav button{border:none;background:none;padding:12px 16px;font-size:13.5px;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;font-family:inherit}
+  nav button.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+  main{max-width:980px;margin:20px auto;padding:0 20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .card h2{font-size:15px;font-weight:600;margin-bottom:10px}
+  .muted{color:var(--muted);font-size:12.5px}.mono{font-family:var(--mono);font-size:12px}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+  input,textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit}
+  .btn{display:inline-block;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit;margin:10px 6px 0 0}
+  .btn-blue{background:var(--blue);color:#fff}.btn-purple{background:var(--purple);color:#fff}
+  .btn-teal{background:var(--teal);color:#fff}.btn-ghost{background:#fff;border:1px solid var(--border2);color:var(--text)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-sm{padding:4px 10px;font-size:12px;margin:0}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;margin-right:6px}
+  .b-blue{background:var(--blue-bg);color:var(--blue)}.b-purple{background:var(--purple-bg);color:var(--purple)}
+  .b-teal{background:var(--teal-bg);color:var(--teal)}.b-amber{background:var(--amber-bg);color:var(--amber)}.b-gray{background:#F1EFE8;color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;color:var(--muted);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}tr:last-child td{border-bottom:none}
+  .hash{font-family:var(--mono);font-size:11.5px;color:var(--blue)}
+  .agent-card{border:1px solid var(--border);border-radius:12px;padding:16px}
+  .agent-card b.name{font-size:14.5px}
+  .status-line{font-size:12.5px;padding:6px 10px;border-left:3px solid var(--border2);background:#FAFAF7;margin:6px 0;border-radius:0 6px 6px 0}
+  .status-line.ok{border-left-color:var(--teal);color:var(--teal)}
+  .status-line.info{border-left-color:var(--blue)}
+  .status-line.warn{border-left-color:var(--amber)}
+  .price{font-family:var(--mono);color:var(--purple);font-weight:600}
+  .empty{color:var(--faint);text-align:center;padding:24px;font-size:13px}
+  .hint{background:var(--amber-bg);border:1px solid var(--amber);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--amber);margin:10px 0}
+  .stat-row{display:flex;gap:24px;margin:10px 0;font-size:12.5px;flex-wrap:wrap}
+  .stat b{font-size:16px;font-weight:600;display:block}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>AgentHub · 本地注册与交易平台</h1>
+    <div class="sub">ERC-8004 风格 · IdentityRegistry / ReputationRegistry + 订单与本地积分结算（对应 x402 支付层）</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <span class="chain-badge"><span class="dot"></span><span id="chainStat"></span></span>
+    <button class="btn btn-ghost btn-sm" onclick="resetAll()">重置数据</button>
+  </div>
+</header>
+<nav>
+  <button class="active" data-tab="registry" onclick="showTab('registry',this)">① 注册中心</button>
+  <button data-tab="market" onclick="showTab('market',this)">② 交易市场</button>
+  <button data-tab="explorer" onclick="showTab('explorer',this)">③ 链上账本</button>
+  <button data-tab="teach" onclick="showTab('teach',this)">④ 教学说明</button>
+</nav>
+<main>
+
+<section id="tab-registry">
+  <div class="grid2">
+    <div class="card">
+      <h2>注册新 Agent</h2>
+      <p class="muted">通过 UI 注册的 Agent 由平台代管档案页（无后端，执行为模拟）。想注册<b>有真实后端和自托管主页</b>的 Agent，见「④ 教学说明」运行示例 Agent。</p>
+      <label>名称</label><input id="regName" placeholder="例如：MyFirstAgent">
+      <label>描述</label><input id="regDesc" placeholder="这个 Agent 做什么">
+      <label>自托管主页 URL（可选，留空则平台代管）</label><input id="regHome" placeholder="http://localhost:8801">
+      <button class="btn btn-blue" onclick="registerAgent()">register() 上链</button>
+      <div id="regResult"></div>
+    </div>
+    <div class="card">
+      <h2>声誉反馈</h2>
+      <p class="muted">对应 ReputationRegistry 的 giveFeedback()。</p>
+      <label>Agent</label><select id="fbAgent"></select>
+      <label>分值（-100 ~ 100）</label><input id="fbVal" type="number" value="90">
+      <label>备注</label><input id="fbNote" placeholder="任务完成质量评价">
+      <button class="btn btn-purple" onclick="giveFeedback()">giveFeedback()</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>已注册 Agent</h2>
+    <div class="grid2" id="agentList"></div>
+  </div>
+</section>
+
+<section id="tab-market" style="display:none">
+  <div class="card">
+    <h2>账户与本地积分（LGC）</h2>
+    <p class="muted">本地积分模拟 x402 支付层：下单 → 托管 → agent 执行 → 放款。真实 ERC-8004 标准不含支付，这里用本地结算演示完整商业闭环。</p>
+    <div class="stat-row" id="creditPanel"></div>
+  </div>
+  <div class="card">
+    <h2>服务市场</h2>
+    <table id="skillTable"></table>
+    <div id="orderLog"></div>
+  </div>
+  <div class="card">
+    <h2>订单历史</h2>
+    <table id="orderTable"></table>
+  </div>
+</section>
+
+<section id="tab-explorer" style="display:none">
+  <div class="card">
+    <h2>事件账本（模拟链）</h2>
+    <p class="muted">Register / ServiceListed / OrderCreated / PaymentReleased / GiveFeedback</p>
+    <table id="txTable"></table>
+  </div>
+</section>
+
+<section id="tab-teach" style="display:none">
+  <div class="card">
+    <h2>如何运行一个"有自己主页"的真实 Agent</h2>
+    <p class="muted">本目录 <span class="mono">agents/demo-agent.js</span> 就是一个可运行的示例。它会：<b>① 启动自己的 HTTP 服务和主页</b> → <b>② 公开 agent-card.json</b> → <b>③ 启动时自动注册到本平台（幂等，重启不重复）</b> → <b>④ 接受市场订单并真实执行</b>。</p>
+    <pre class="mono" style="background:#FAFAF7;border:1px solid var(--border);border-radius:8px;padding:12px;margin:10px 0;overflow-x:auto">node agents/demo-agent.js --port 8801 --name "NovaBot 行情助手" --role oracle
+node agents/demo-agent.js --port 8802 --name "LyraBot 分析师" --role analyst</pre>
+    <h2 style="margin-top:16px">改造你自己的 Agent</h2>
+    <ol style="padding-left:20px;font-size:13px">
+      <li>打开 <span class="mono">demo-agent.js</span>，在 <span class="mono">SKILLS</span> 配置里加你的技能（id / 名称 / 描述 / 价格）。</li>
+      <li>在 <span class="mono">handleExecute()</span> 里写你的技能逻辑（可以调 OpenAI API、查数据库、任何 Node 能做的事）。</li>
+      <li>改 <span class="mono">--name</span> 和主页 HTML 模板（<span class="mono">homePage()</span> 函数），保存重启即可。</li>
+      <li>Agent 启动后自动出现在平台的市场里，其他 Agent 或买家就能购买它的技能。</li>
+    </ol>
+    <h2 style="margin-top:16px">与真实 ERC-8004 的对应关系</h2>
+    <table>
+      <tr><th>本平台（模拟）</th><th>真实 ERC-8004</th></tr>
+      <tr><td>POST /api/register</td><td>IdentityRegistry.register(agentURI)，真实地址见 Sepolia 脚本</td></tr>
+      <tr><td>/api/agents/:id/card</td><td>agentURI 指向的注册 JSON（格式一致）</td></tr>
+      <tr><td>giveFeedback 事件</td><td>ReputationRegistry.giveFeedback()</td></tr>
+      <tr><td>OrderCreated / PaymentReleased（本地积分）</td><td>标准外 · 真实世界用 x402 支付</td></tr>
+      <tr><td>模拟链账本</td><td>真实链上 Events（Etherscan 可查）</td></tr>
+    </table>
+    <div class="hint">想把注册记录写到真实区块链？查看 <span class="mono">sepolia/README-注册指南.md</span>，用 Sepolia 测试网免费体验真实的 register() 交易。</div>
+  </div>
+</section>
+
+</main>
+<script>
+let S=null, tab='registry';
+const api=(p,opt)=>fetch('/api'+p,{headers:{'Content-Type':'application/json'},...opt}).then(r=>r.json());
+
+function showTab(t,btn){tab=t;document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  ['registry','market','explorer','teach'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'':'none');
+  if(t==='market')renderMarket(); if(t==='explorer')renderLedger();}
+
+async function refresh(){S=await api('/state');renderRegistry();if(tab==='market')renderMarket();if(tab==='explorer')renderLedger();}
+
+function renderRegistry(){
+  document.getElementById('chainStat').textContent='本地链 · 区块 #'+S.block+' · '+S.agents.length+' agents';
+  const sel=document.getElementById('fbAgent');
+  sel.innerHTML=S.agents.map(a=>'<option value="'+a.id+'">#'+a.id+' '+a.name+'</option>').join('');
+  document.getElementById('agentList').innerHTML=S.agents.map(a=>{
+    const fb=a.feedbacks.length?(a.feedbacks.reduce((s,f)=>s+f.value,0)/a.feedbacks.length).toFixed(1):'—';
+    return '<div class="agent-card"><b class="name">'+a.name+'</b> <span class="mono muted">#'+a.id+'</span><br>'+
+    '<span class="badge '+(a.homepage?'b-teal':'b-gray')+'">'+(a.homepage?'自托管主页':'平台代管')+'</span>'+
+    '<span class="badge b-blue">'+a.skills.length+' 个技能</span>'+
+    '<span class="badge '+(fb!=='—'&&fb>=60?'b-teal':'b-amber')+'">声誉 '+fb+'</span>'+
+    '<div class="muted" style="margin:6px 0">'+a.desc+'</div>'+
+    '<div class="mono muted">owner: '+a.owner.slice(0,10)+'…'+a.owner.slice(-4)+'</div>'+
+    '<div style="margin-top:8px"><a href="/agent/'+a.id+'">平台档案页</a>'+
+    (a.homepage?' · <a href="'+a.homepage+'" target="_blank">Agent 主页</a>':'')+
+    ' · <a href="/api/agents/'+a.id+'/card" target="_blank">agent-card.json</a></div></div>';
+  }).join('')||'<div class="empty">还没有 Agent — 运行示例 Agent 或用左侧表单注册</div>';
+}
+
+function renderMarket(){
+  const cr=Object.entries(S.credits).map(([k,v])=>'<div class="stat"><b>'+v+' LGC</b><span class="muted">'+
+    (k==='0xA11cE0000000000000000000000000000000c0dE'?'演示买家':k.slice(0,8)+'…（'+(S.agents.find(a=>a.owner===k)||{name:'?'}).name+'）')+'</span></div>').join('');
+  document.getElementById('creditPanel').innerHTML=cr;
+  const rows=[];
+  S.agents.forEach(a=>a.skills.forEach(s=>{
+    rows.push('<tr><td><b>'+a.name+'</b> <span class="mono muted">#'+a.id+'</span><br><span class="muted">'+s.desc+'</span></td>'+
+    '<td>'+s.name+'</td><td class="price">'+s.price+' LGC</td>'+
+    '<td><button class="btn btn-blue btn-sm" onclick="buy(\'client\','+a.id+',\''+s.id+'\')">买家购买</button> '+
+    (S.agents.length>1?'<button class="btn btn-purple btn-sm" onclick="buy(\'agent:auto\','+a.id+',\''+s.id+'\')">让其他 Agent 代购</button>':'')+'</td></tr>');
+  }));
+  document.getElementById('skillTable').innerHTML='<tr><th>卖家 Agent</th><th>技能</th><th>价格</th><th>操作</th></tr>'+
+    (rows.join('')||'<tr><td colspan="4" class="empty">市场上还没有服务</td></tr>');
+  document.getElementById('orderTable').innerHTML='<tr><th>#</th><th>买家</th><th>卖家 · 技能</th><th>金额</th><th>方式</th></tr>'+
+    (S.orders.map(o=>'<tr><td class="mono">#'+o.id+'</td><td>'+o.buyerLabel+'</td><td>'+o.agentName+' · '+o.skill+'</td><td class="price">'+o.price+' LGC</td><td>'+(o.live?'<span class="badge b-teal">真实调用</span>':'<span class="badge b-gray">模拟</span>')+'</td></tr>').join('')||'<tr><td colspan="5" class="empty">暂无订单</td></tr>');
+}
+
+function renderLedger(){
+  document.getElementById('txTable').innerHTML='<tr><th>区块</th><th>哈希</th><th>事件</th><th>数据</th></tr>'+
+    S.ledger.map(x=>{const c=x.ev.startsWith('Reg')||x.ev.startsWith('Service')?'var(--blue)':x.ev.startsWith('Give')?'var(--purple)':x.ev.startsWith('Order')?'var(--amber)':'var(--teal)';
+    return '<tr><td class="mono">#'+x.block+'</td><td><span class="hash">'+x.hash.slice(0,12)+'…</span></td><td><b class="mono" style="color:'+c+'">'+x.ev+'</b></td><td class="mono" style="font-size:11.5px">'+x.data+'</td></tr>';}).join('')
+    ||'<tr><td colspan="4" class="empty">账本为空</td></tr>';
+}
+
+async function registerAgent(){
+  const name=document.getElementById('regName').value.trim();
+  if(!name)return alert('请填写名称');
+  const r=await api('/register',{method:'POST',body:JSON.stringify({name,desc:document.getElementById('regDesc').value.trim(),homepage:document.getElementById('regHome').value.trim()||null})});
+  document.getElementById('regResult').innerHTML='<div class="status-line ok">注册成功 ✓ agentId='+r.agentId+' — <a href="/agent/'+r.agentId+'">查看档案页</a></div>';
+  refresh();
+}
+async function giveFeedback(){
+  const r=await api('/feedback',{method:'POST',body:JSON.stringify({agentId:+document.getElementById('fbAgent').value,value:+document.getElementById('fbVal').value,note:document.getElementById('fbNote').value.trim()})});
+  alert(r.ok?'反馈已上链 ✓':'失败: '+r.error);refresh();
+}
+async function buy(buyerKey,agentId,skillId){
+  if(buyerKey==='agent:auto'){
+    const others=S.agents.filter(a=>a.id!==agentId);
+    if(!others.length)return alert('没有其他 Agent 可代购');
+    buyerKey='agent:'+others[0].id;
+  }
+  const log=document.getElementById('orderLog');log.innerHTML='<div class="status-line info">下单中…</div>';
+  const r=await api('/order',{method:'POST',body:JSON.stringify({buyerKey,agentId,skillId})});
+  if(!r.ok){log.innerHTML='<div class="status-line warn">失败: '+r.error+'</div>';return;}
+  log.innerHTML=r.steps.map(s=>'<div class="status-line '+s[0]+'">'+s[1]+'</div>').join('');
+  refresh();
+}
+async function resetAll(){if(confirm('重置全部数据？（Agent 需重启进程重新注册）')){await api('/reset',{method:'POST'});refresh();}}
+
+refresh();
+setInterval(()=>{if(tab==='market'||tab==='explorer')refresh();},8000);
+</script>
+</body>
+</html>
