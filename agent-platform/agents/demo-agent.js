@@ -19,6 +19,7 @@ const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { pageShell, langSwitch } = require(path.join(__dirname, '..', 'theme'));
 
 /* ---------- 命令行参数 ---------- */
 const args = {};
@@ -28,6 +29,8 @@ const PORT = +(args.port || 8801);
 const NAME = args.name || 'MyAgent';
 const ROLE = args.role || 'oracle';
 const PLATFORM = args.platform || 'http://localhost:8800';
+// RepuGate 声誉档案（可选）：honest-service / ungrounded-feedback / receipt-replay / reviewer-concentration / offer-substitution
+const SCENARIO = args.scenario || 'honest-service';
 const THEME = ROLE === 'analyst'
   ? { c1: '#534AB7', c2: '#185FA5', bg1: '#EEEDFE', bg2: '#E6F1FB', tag: '分析师' }
   : { c1: '#0F6E56', c2: '#185FA5', bg1: '#E1F5EE', bg2: '#E6F1FB', tag: '行情' };
@@ -70,54 +73,110 @@ try { fs.mkdirSync(path.dirname(idFile), { recursive: true }); fs.writeFileSync(
 let myAgentId = null;
 
 /* ---------- 页面 ---------- */
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 function homePage() {
   const skillHtml = SKILLS.map(s =>
-    '<div class="skill"><div class="sname">' + s.name + '</div><div class="sdesc">' + s.desc + '</div><div class="sprice">' + s.price + ' LGC</div></div>').join('');
-  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>${NAME} · 自托管主页</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;background:#F7F7F4;color:#2C2C2A;font-size:14px;line-height:1.6}
-.hero{background:linear-gradient(135deg,${THEME.bg1},${THEME.bg2});padding:48px 24px;text-align:center}
-.avatar{width:84px;height:84px;border-radius:50%;background:${THEME.c1};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:34px;font-weight:600;margin-bottom:14px}
-h1{font-size:22px;font-weight:600}.role{display:inline-block;background:${THEME.c1};color:#fff;font-size:12px;border-radius:12px;padding:2px 12px;margin:8px 0}
-p.desc{max-width:520px;margin:8px auto;color:#555}
-main{max-width:820px;margin:24px auto;padding:0 20px}
-.card{background:#fff;border:1px solid #E3E1D9;border-radius:12px;padding:18px 20px;margin-bottom:16px}
-h2{font-size:15px;font-weight:600;margin-bottom:12px}
-.skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.skill{border:1px solid #E3E1D9;border-radius:10px;padding:14px}
-.sname{font-weight:600}.sdesc{font-size:12.5px;color:#6E6D66;margin:4px 0}
-.sprice{font-family:Consolas,monospace;color:${THEME.c1};font-weight:600}
-.links a{margin-right:14px;font-size:13px}
-.mono{font-family:Consolas,monospace;font-size:12px;color:#6E6D66}
-footer{text-align:center;color:#9C9B93;font-size:12px;padding:20px}
-a{color:${THEME.c1}}
-</style></head><body>
-<div class="hero">
-  <div class="avatar">${NAME.slice(0, 1)}</div>
-  <h1>${NAME}</h1>
-  <span class="role">${THEME.tag} Agent · ERC-8004 风格注册</span>
-  <p class="desc">${DESC}</p>
-</div>
-<main>
-  <div class="card">
-    <h2>我的技能 · 在<a href="http://localhost:8800" style="margin:0 4px">AgentHub 市场</a>可直接下单</h2>
-    <div class="skills">${skillHtml}</div>
+    '<div class="skillcard"><h4>' + esc(s.name) + '</h4>' +
+    '<div class="sdesc">' + esc(s.desc) + '</div>' +
+    '<div class="sprice">' + s.price + ' LGC</div></div>').join('');
+
+  const platformUrl = PLATFORM;
+  const profileUrl = platformUrl + (myAgentId ? '/agent/' + myAgentId : '');
+  const roleKey = ROLE === 'analyst' ? 'home.tagAnalyst' : 'home.tagOracle';
+
+  // 传给前端 i18n 的运行时变量（含 Agent 自身信息，双语各一份）
+  const vars = {
+    'home.name': NAME,
+    'home.role': ROLE === 'analyst' ? '分析师' : '行情',
+    'home.roleEn': ROLE === 'analyst' ? 'Analyst' : 'Oracle',
+    'home.desc': DESC,
+    'home.descEn': ROLE === 'analyst'
+      ? 'An autonomous agent focused on portfolio analysis and risk assessment, hosted on a local registry.'
+      : 'An autonomous agent providing live crypto quotes and market briefs, hosted on a local registry.',
+    'home.port': String(PORT)
+  };
+
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(NAME)} · ${esc(ROLE === 'analyst' ? 'Analyst Agent' : 'Oracle Agent')}</title>
+${pageShell('', vars)}
+</head><body><div class="pagewrap">
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="/"><span class="brand-mark">A</span><span>AgentHub</span></a>
+    <div class="spacer"></div>
+    <div class="site-actions">
+      <span class="status online"><span class="status-dot"></span>localhost:${PORT}</span>
+      ${langSwitch()}
+      <a class="btn btn-quiet btn-sm" href="${esc(platformUrl)}" data-i18n="common.back">← 返回平台</a>
+    </div>
   </div>
-  <div class="card">
-    <h2>身份信息</h2>
-    <div class="mono">agentId: ${myAgentId ? '#' + myAgentId : '注册中…'}（eip155:31337 本地注册表）</div>
-    <div class="mono">agent-card: <a href="/.well-known/agent-card.json">/.well-known/agent-card.json</a></div>
-    <div class="mono">平台档案: <a href="http://localhost:8800${myAgentId ? '/agent/' + myAgentId : ''}">AgentHub Profile</a></div>
-  </div>
-  <div class="card">
-    <h2>这是一个真实的自托管 Agent</h2>
-    <p style="font-size:13px;color:#555">你现在看到的页面由 <span class="mono">${NAME}</span> 进程自己托管（端口 ${PORT}）。
-    市场里有人购买它的技能时，平台会直接 POST 调用本进程的 <span class="mono">/api/execute</span>，
-    执行结果真实返回，报酬通过本地积分结算——类比真实世界中的 x402 支付。</p>
-  </div>
+</header>
+<main style="padding-top:0">
+  <section class="ticket page-hero">
+    <div class="eyebrow" style="margin-bottom:18px"><span></span><span data-i18n="home.kicker">Self-hosted agent</span></div>
+    <div class="mark">${esc(NAME.slice(0, 1).toUpperCase())}</div>
+    <h1>${esc(NAME)}</h1>
+    <div class="tagline">${esc(DESC)}</div>
+    <div class="tags">
+      <span class="tag">${esc(THEME.tag)} Agent</span>
+      <span class="tag">ERC-8004</span>
+      <span class="tag">port ${PORT}</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <div>
+        <span class="section-index" data-i18n="home.skillsIndex">技能目录</span>
+        <h2 data-i18n="home.skills">我的技能</h2>
+      </div>
+      <p><a href="${esc(platformUrl)}" data-i18n="home.skillsNote">在 AgentHub 市场可直接下单</a></p>
+    </div>
+    <div class="skgrid">${skillHtml}</div>
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <div>
+        <span class="section-index" data-i18n="home.identityIndex">身份信息</span>
+        <h2 data-i18n="home.identity">身份信息</h2>
+      </div>
+    </div>
+    <div class="table-wrap" style="max-width:640px"><table style="min-width:0">
+      <tbody>
+        <tr><td class="muted" style="width:132px">agentId</td><td class="mono">${myAgentId ? '#' + myAgentId : '<span data-i18n="home.registered">注册中…</span>'}</td></tr>
+        <tr><td class="muted">registry</td><td class="mono">eip155:31337 · 0xL0ca1Reg1stry000000000000000000000000</td></tr>
+        <tr><td class="muted">agent-card</td><td class="mono"><a href="/.well-known/agent-card.json">/.well-known/agent-card.json</a></td></tr>
+        <tr><td class="muted">profile</td><td class="mono"><a href="${esc(profileUrl)}" data-i18n="home.platformProfile">平台档案</a></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <div>
+        <span class="section-index" data-i18n="home.aboutIndex">自托管</span>
+        <h2 data-i18n="home.aboutTitle">这是一个真实的自托管 Agent</h2>
+      </div>
+    </div>
+    <div class="callout">
+      <span data-i18n="home.about1">你现在看到的页面由</span>
+      <span class="mono">${esc(NAME)}</span>
+      <span data-i18n="home.about2">进程自己托管（端口</span>
+      <span class="mono">${PORT}</span><span>）</span><span data-i18n="home.about3">。市场里有人购买它的技能时，平台会直接 POST 调用本进程的</span>
+      <span class="mono">/api/execute</span><span data-i18n="home.about4">，执行结果真实返回，报酬通过本地积分结算——类比真实世界中的 x402 支付。</span>
+    </div>
+  </section>
 </main>
-<footer>${NAME} · self-hosted agent homepage · powered by local ERC-8004-style registry</footer>
-</body></html>`;
+<footer class="site"><div class="site-footer">
+  <span>${esc(NAME)} · localhost:${PORT}</span>
+  <span data-i18n="home.footer">自托管 Agent 主页 · 由本地 ERC-8004 风格注册表驱动</span>
+</div></footer>
+</div></body></html>`;
 }
 
 /* ---------- HTTP 服务 ---------- */
@@ -161,6 +220,7 @@ server.listen(PORT, () => {
 
   const register = (attempt) => {
     const body = JSON.stringify({ instanceId, name: NAME, desc: DESC, homepage: 'http://localhost:' + PORT,
+      repugateScenario: SCENARIO,
       skills: SKILLS.map(s => ({ id: s.id, name: s.name, desc: s.desc, price: s.price })) });
     const req = http.request(PLATFORM + '/api/register', { method: 'POST', headers: { 'content-type': 'application/json' } }, res => {
       let d = ''; res.on('data', c => (d += c));

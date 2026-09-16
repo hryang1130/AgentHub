@@ -2,231 +2,1179 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentHub · 本地智能体注册与交易平台</title>
+<title>AgentHub · 智能体注册与交易平台</title>
 <style>
-  :root{--bg:#F7F7F4;--card:#FFF;--border:#E3E1D9;--border2:#C9C7BD;--text:#2C2C2A;--muted:#6E6D66;--faint:#9C9B93;
-    --blue:#185FA5;--blue-bg:#E6F1FB;--purple:#534AB7;--purple-bg:#EEEDFE;--teal:#0F6E56;--teal-bg:#E1F5EE;
-    --amber:#854F0B;--amber-bg:#FAEEDA;--red:#A32D2D;--mono:ui-monospace,Consolas,monospace}
+  :root{
+    /* 纸面 */
+    --paper:#f4f6fb; --surface:#ffffff; --surface-2:#fbfcfe;
+    --ink:#13173a; --muted:#5d6488; --muted-2:#8b91b3;
+
+    /* 票根反相区 */
+    --ticket:#1a1f4d; --ticket-2:#252b68; --ticket-text:#eaecff; --ticket-muted:#a9b0e8;
+
+    /* 主色与语义色 */
+    --brand:#3d5afe; --brand-strong:#2c3ce0; --brand-soft:#eaeeff;
+    --pos:#0b8a5c; --pos-soft:#e6f6ef;
+    --warn:#b45309; --warn-soft:#fdf3e3;
+    --neg:#d92d3f; --neg-soft:#fdecee;
+
+    /* 描边与阴影 */
+    --line:#e2e6f4; --line-2:#ccd3ec;
+    --shadow:0 1px 2px rgba(23,29,74,.06),0 12px 32px -14px rgba(23,29,74,.22);
+    --shadow-sm:0 1px 2px rgba(23,29,74,.07);
+
+    /* 字体 */
+    --serif:Georgia,'Times New Roman','Songti SC','SimSun',serif;
+    --sans:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+    /* 斜切票根 */
+    --notch:11px;
+  }
+
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
-  header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
-  header h1{font-size:17px;font-weight:600}
-  header .sub{font-size:12px;color:var(--muted)}
-  .chain-badge{display:inline-flex;align-items:center;gap:6px;background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal);border-radius:20px;padding:3px 12px;font-size:12px;font-family:var(--mono)}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 1.6s infinite}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-  nav{display:flex;gap:4px;background:var(--card);border-bottom:1px solid var(--border);padding:0 24px}
-  nav button{border:none;background:none;padding:12px 16px;font-size:13.5px;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;font-family:inherit}
-  nav button.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
-  main{max-width:980px;margin:20px auto;padding:0 20px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:16px}
-  .card h2{font-size:15px;font-weight:600;margin-bottom:10px}
-  .muted{color:var(--muted);font-size:12.5px}.mono{font-family:var(--mono);font-size:12px}
-  label{display:block;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
-  input,textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:8px;font-size:13px;font-family:inherit}
-  .btn{display:inline-block;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit;margin:10px 6px 0 0}
-  .btn-blue{background:var(--blue);color:#fff}.btn-purple{background:var(--purple);color:#fff}
-  .btn-teal{background:var(--teal);color:#fff}.btn-ghost{background:#fff;border:1px solid var(--border2);color:var(--text)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
-  .btn-sm{padding:4px 10px;font-size:12px;margin:0}
-  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;margin-right:6px}
-  .b-blue{background:var(--blue-bg);color:var(--blue)}.b-purple{background:var(--purple-bg);color:var(--purple)}
-  .b-teal{background:var(--teal-bg);color:var(--teal)}.b-amber{background:var(--amber-bg);color:var(--amber)}.b-gray{background:#F1EFE8;color:var(--muted)}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.grid2{grid-template-columns:1fr}}
-  table{width:100%;border-collapse:collapse;font-size:12.5px}
-  th{text-align:left;color:var(--muted);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--border)}
-  td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}tr:last-child td{border-bottom:none}
-  .hash{font-family:var(--mono);font-size:11.5px;color:var(--blue)}
-  .agent-card{border:1px solid var(--border);border-radius:12px;padding:16px}
-  .agent-card b.name{font-size:14.5px}
-  .status-line{font-size:12.5px;padding:6px 10px;border-left:3px solid var(--border2);background:#FAFAF7;margin:6px 0;border-radius:0 6px 6px 0}
-  .status-line.ok{border-left-color:var(--teal);color:var(--teal)}
-  .status-line.info{border-left-color:var(--blue)}
-  .status-line.warn{border-left-color:var(--amber)}
-  .price{font-family:var(--mono);color:var(--purple);font-weight:600}
-  .empty{color:var(--faint);text-align:center;padding:24px;font-size:13px}
-  .hint{background:var(--amber-bg);border:1px solid var(--amber);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--amber);margin:10px 0}
-  .stat-row{display:flex;gap:24px;margin:10px 0;font-size:12.5px;flex-wrap:wrap}
-  .stat b{font-size:16px;font-weight:600;display:block}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);font-family:var(--sans);
+    font-size:14.5px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--brand);text-decoration:none}
+  a:hover{color:var(--brand-strong);text-decoration:underline;text-underline-offset:2px}
+  button,input,select,textarea{font:inherit;color:inherit}
+
+  /* ---------- 页头 ---------- */
+  header.site{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.9);
+    backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .site-inner{max-width:1360px;margin:0 auto;padding:15px clamp(18px,4vw,44px);
+    display:flex;align-items:center;gap:20px}
+  .brand{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:750;
+    letter-spacing:-.02em;color:var(--ink);flex:none}
+  .brand:hover{text-decoration:none;color:var(--ink)}
+  .brand-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(140deg,#5872ff,#2c3ce0);
+    color:#fff;display:grid;place-items:center;font-family:var(--serif);font-size:16px;
+    font-weight:700;line-height:1;flex:none;box-shadow:0 4px 12px -4px rgba(61,90,254,.65)}
+  .version{color:var(--muted-2);font-family:var(--mono);font-size:10px;font-weight:500;
+    letter-spacing:.08em;text-transform:uppercase;background:var(--paper);
+    border:1px solid var(--line);border-radius:5px;padding:3px 7px}
+  .spacer{flex:1}
+  .site-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+
+  .status{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;
+    background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px 6px 11px}
+  .status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted-2);flex:none}
+  .status.online .status-dot{background:var(--pos);box-shadow:0 0 0 4px rgba(11,138,92,.13)}
+  .status.offline .status-dot{background:var(--neg);box-shadow:0 0 0 4px rgba(217,45,63,.12)}
+
+  .langswitch{display:flex;background:var(--paper);border:1px solid var(--line);
+    border-radius:9px;padding:2px;gap:2px}
+  .langswitch button{background:transparent;border:0;color:var(--muted);cursor:pointer;
+    font-size:11px;font-weight:600;letter-spacing:.03em;border-radius:7px;padding:6px 11px;
+    transition:background .16s ease,color .16s ease}
+  .langswitch button:hover{color:var(--ink)}
+  .langswitch button.active{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-sm)}
+
+  /* ---------- 提示条（票根边上撕下来的小纸条） ---------- */
+  .ticker{background:var(--ticket);color:var(--ticket-muted);border-bottom:1px solid rgba(255,255,255,.08)}
+  .ticker-inner{max-width:1360px;margin:0 auto;padding:9px clamp(18px,4vw,44px);
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+  .ticker b{color:#fff;font-weight:600}
+  .ticker em{color:#ffd98a;font-style:normal}
+  .ticker-sep{color:rgba(255,255,255,.22)}
+  .ticker .spacer{flex:1}
+
+  /* ---------- 按钮 ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--surface);border:1px solid var(--line-2);color:var(--ink);cursor:pointer;
+    font-size:12.5px;font-weight:620;border-radius:9px;padding:9px 15px;
+    box-shadow:var(--shadow-sm);transition:border-color .16s,background .16s,color .16s,transform .16s}
+  .btn:hover:not(:disabled){border-color:var(--brand);color:var(--brand)}
+  .btn:active:not(:disabled){transform:translateY(1px)}
+  .btn:disabled{cursor:not-allowed;opacity:.45;box-shadow:none}
+  .btn-primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:680;
+    justify-content:space-between;gap:20px;padding:14px 18px;font-size:13px;
+    box-shadow:0 10px 24px -12px rgba(61,90,254,.9)}
+  .btn-primary:hover:not(:disabled){background:var(--brand-strong);border-color:var(--brand-strong);color:#fff}
+  .btn-quiet{background:transparent;border-color:var(--line);color:var(--muted);box-shadow:none}
+  .btn-sm{padding:6px 11px;font-size:11.5px;border-radius:7px}
+
+  /* ---------- 表单控件 ---------- */
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field > label{color:var(--ink);font-size:12.5px;font-weight:640;display:flex;gap:6px;
+    align-items:baseline;flex-wrap:wrap}
+  .field .help{color:var(--muted-2);font-size:11px;font-weight:500}
+  input,select,textarea{width:100%;background:var(--surface);border:1px solid var(--line-2);
+    color:var(--ink);font-size:13.5px;border-radius:9px;padding:10px 12px;outline:0;
+    transition:border-color .16s,box-shadow .16s}
+  input:focus,select:focus,textarea:focus{border-color:var(--brand);
+    box-shadow:0 0 0 3.5px rgba(61,90,254,.14)}
+  input::placeholder,textarea::placeholder{color:var(--muted-2)}
+  select{cursor:pointer;appearance:none;padding-right:34px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%235d6488' stroke-width='1.7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 13px center}
+
+  .segmented{display:flex;background:var(--surface);border:1px solid var(--line-2);
+    border-radius:10px;padding:3px;gap:3px;box-shadow:var(--shadow-sm)}
+  .segmented button{flex:1 1 0;background:transparent;border:0;color:var(--muted);cursor:pointer;
+    font-size:12px;font-weight:620;min-width:22px;padding:9px 10px;border-radius:7px;
+    white-space:nowrap;transition:background .16s,color .16s}
+  .segmented button:hover{color:var(--ink)}
+  .segmented button.active{background:var(--brand);color:#fff;box-shadow:0 6px 14px -8px rgba(61,90,254,.9)}
+
+  /* ---------- 门禁模型选择卡 ---------- */
+  .model-grid{display:grid;gap:11px;grid-template-columns:repeat(auto-fit,minmax(202px,1fr))}
+  .model-card{position:relative;text-align:left;background:var(--surface);cursor:pointer;
+    border:1.5px solid var(--line);border-radius:14px;padding:17px 17px 15px;
+    display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow-sm);
+    transition:border-color .16s,box-shadow .16s,transform .16s}
+  .model-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .model-card .code{position:absolute;top:15px;right:15px;font-family:var(--mono);font-size:10px;
+    font-weight:600;letter-spacing:.06em;color:var(--muted-2)}
+  .model-card strong{font-size:14.5px;font-weight:700;letter-spacing:-.015em;padding-right:44px;
+    display:block}
+  .model-card small{color:var(--muted);font-size:12px;line-height:1.5;display:block}
+  .model-card .tag{align-self:flex-start;margin-top:2px}
+  .model-card.active{border-color:var(--brand);background:var(--brand-soft);
+    box-shadow:0 0 0 3.5px rgba(61,90,254,.13),var(--shadow)}
+  .model-card.active strong{color:var(--brand-strong)}
+  .model-card .check{position:absolute;bottom:15px;right:15px;width:20px;height:20px;border-radius:6px;
+    border:1.5px solid var(--line-2);display:grid;place-items:center;font-size:12px;color:transparent;
+    line-height:1}
+  .model-card.active .check{background:var(--brand);border-color:var(--brand);color:#fff}
+
+  /* ---------- 页面骨架 ---------- */
+  main{max-width:1360px;margin:0 auto;padding:0 clamp(18px,4vw,44px) 84px}
+  section{padding:42px 0}
+  section + section{border-top:1px solid var(--line)}
+
+  /* 深靛蓝票根区：左右斜切 + 虚线撕口，强制浅色文字 */
+  .ticket{background:linear-gradient(160deg,#212664,#171c45 62%);
+    border-radius:18px;padding:44px 40px;color:var(--ticket-text);position:relative;
+    overflow:hidden;box-shadow:0 22px 48px -26px rgba(23,29,74,.72);
+    clip-path:polygon(var(--notch) 0,100% 0,calc(100% - var(--notch)) 100%,0 100%)}
+  .ticket::before{content:'';position:absolute;inset:9px;border:1px dashed rgba(255,255,255,.17);
+    border-radius:12px;pointer-events:none}
+  .ticket::after{content:'';position:absolute;right:-70px;top:-70px;width:300px;height:300px;
+    border-radius:50%;background:radial-gradient(circle,rgba(122,146,255,.34),transparent 68%);
+    pointer-events:none}
+  .ticket h1,.ticket h2,.ticket strong,.ticket a,.ticket em{color:#fff}
+  .ticket .muted,.ticket p{color:var(--ticket-muted)}
+  .hero{padding-top:46px;padding-bottom:50px}
+  .hero .eyebrow{color:var(--ticket-muted)}
+
+  .eyebrow{display:flex;align-items:center;gap:10px;color:var(--brand);
+    font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    margin-bottom:20px;position:relative;z-index:1}
+  .eyebrow > span:first-child{width:26px;height:2px;border-radius:2px;background:currentColor;flex:none}
+  h1.hero-title{font-family:var(--serif);font-weight:400;font-size:clamp(36px,5vw,60px);
+    line-height:1.06;letter-spacing:-.028em;color:#fff;max-width:900px;position:relative;z-index:1}
+  h1.hero-title em{font-style:italic;color:#b9c4ff}
+  .hero-lede{color:var(--ticket-muted);font-size:16px;line-height:1.68;margin:24px 0 30px;
+    max-width:640px;position:relative;z-index:1}
+  .hero-protocol{display:flex;align-items:center;flex-wrap:wrap;gap:13px;position:relative;z-index:1}
+  .hero-protocol span{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;
+    text-transform:uppercase;color:#aab3ee}
+  .hero-protocol i{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.3);flex:none}
+
+  .section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+    margin-bottom:22px;flex-wrap:wrap}
+  .section-heading h2{font-family:var(--serif);font-size:clamp(22px,2.5vw,31px);font-weight:400;
+    letter-spacing:-.02em;margin:6px 0 0;color:var(--ink)}
+  .section-heading > p{color:var(--muted);font-size:13px;line-height:1.55;max-width:420px;
+    text-align:right;margin:0}
+  .section-index{color:var(--brand);font-size:11px;font-weight:700;letter-spacing:.13em;
+    text-transform:uppercase}
+  .section-index::before{content:'§ ';color:var(--muted-2)}
+
+  /* ---------- 卡片 / 网格 ---------- */
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:22px;box-shadow:var(--shadow-sm)}
+  .panel + .panel{margin-top:11px}
+  .grid{display:grid;gap:11px}
+  .grid-2{grid-template-columns:1.45fr 1fr}
+  .grid-2-even{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media(max-width:900px){.grid-2,.grid-2-even,.grid-3{grid-template-columns:1fr}}
+
+  /* ---------- 指标条（嵌在深色票根里的一排数字） ---------- */
+  .metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;box-shadow:var(--shadow-sm)}
+  .metric{background:var(--surface);padding:20px;min-height:118px;min-width:0}
+  @media(max-width:1100px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  .metric-label{display:block;color:var(--muted);font-size:10.5px;font-weight:700;
+    letter-spacing:.12em;text-transform:uppercase;margin-bottom:13px}
+  .metric strong{display:block;font-family:var(--serif);font-size:clamp(27px,3vw,40px);
+    font-weight:400;letter-spacing:-.03em;line-height:1;overflow:hidden;text-overflow:ellipsis;
+    white-space:nowrap}
+  .metric small{display:block;color:var(--muted-2);font-size:11px;margin-top:11px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .metric.accent strong,.metric.allow strong{color:var(--pos)}
+  .metric.block strong{color:var(--neg)}
+  .metric.review strong{color:var(--warn)}
+
+  /* ---------- 选择卡片（Agent） ---------- */
+  .pick-grid{display:grid;gap:11px;grid-template-columns:repeat(auto-fill,minmax(292px,1fr))}
+  .pick-card{display:flex;align-items:flex-start;gap:13px;background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;cursor:pointer;padding:17px;
+    text-align:left;min-height:88px;box-shadow:var(--shadow-sm);
+    transition:border-color .16s,box-shadow .16s,transform .16s}
+  .pick-card:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--line-2)}
+  .pick-card.selected{border-color:var(--brand);box-shadow:0 0 0 3.5px rgba(61,90,254,.13)}
+  .pick-num{width:26px;height:26px;border-radius:8px;background:var(--brand-soft);color:var(--brand-strong);
+    font-family:var(--mono);font-size:11px;font-weight:600;display:grid;place-items:center;
+    flex:none;margin-top:1px}
+  .pick-copy{display:flex;flex:1;flex-direction:column;gap:7px;min-width:0}
+  .pick-copy strong{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:8px;
+    flex-wrap:wrap;letter-spacing:-.015em}
+  .pick-copy small{color:var(--muted-2);font-family:var(--mono);font-size:10.5px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .radio-dot{display:none}
+
+  /* ---------- 标签 ---------- */
+  .tag{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line-2);
+    background:var(--surface-2);color:var(--muted);font-size:10.5px;font-weight:620;
+    letter-spacing:.02em;border-radius:6px;padding:3px 8px;white-space:nowrap}
+  .tag-green{border-color:rgba(11,138,92,.28);background:var(--pos-soft);color:var(--pos)}
+  .tag-amber{border-color:rgba(180,83,9,.26);background:var(--warn-soft);color:var(--warn)}
+  .tag-red{border-color:rgba(217,45,63,.24);background:var(--neg-soft);color:var(--neg)}
+  .tag-plain{border-color:var(--line);background:var(--surface);color:var(--muted-2)}
+
+  /* ---------- 表格（数据等宽 + 点状引导线） ---------- */
+  .table-wrap{border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    overflow-x:auto;background:var(--surface);box-shadow:var(--shadow-sm)}
+  table{border-collapse:collapse;width:100%;min-width:640px}
+  th{background:var(--surface-2);color:var(--muted);font-size:10.5px;font-weight:700;
+    letter-spacing:.11em;padding:13px 16px;text-align:left;text-transform:uppercase;
+    border-bottom:1px solid var(--line);white-space:nowrap}
+  td{border-top:1px solid var(--line);color:#3b4166;font-size:12.5px;padding:13px 16px;
+    vertical-align:top}
+  tbody tr:first-child td{border-top:0}
+  tbody tr:hover td{background:var(--surface-2)}
+  .table-empty td{color:var(--muted-2);padding:30px;text-align:center}
+  .mono{font-family:var(--mono);font-size:11.5px}
+  .muted{color:var(--muted);font-size:12.5px}
+  .cell-main{color:var(--ink);font-weight:680;display:block}
+  .cell-sub{color:var(--muted-2);font-family:var(--mono);font-size:10.5px;display:block;margin-top:4px}
+  .price{font-family:var(--mono);color:var(--brand-strong);font-size:12.5px;font-weight:600;
+    white-space:nowrap}
+  /* 账簿式点状引导线：左标签 ···· 右数值 */
+  .lead{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .lead > i{flex:1;border-bottom:1px dotted var(--line-2);transform:translateY(-3px);min-width:14px}
+
+  /* ---------- 流程轨迹（票根式时间线） ---------- */
+  .flow{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--surface);
+    box-shadow:var(--shadow-sm);overflow:hidden}
+  .flow-head{background:var(--ticket);color:#c8cffb;font-size:10.5px;font-weight:700;
+    letter-spacing:.13em;text-transform:uppercase;padding:12px 16px}
+  .flow-row{display:flex;gap:13px;align-items:flex-start;border-top:1px solid var(--line);
+    padding:13px 16px;position:relative}
+  .flow-row:first-of-type{border-top:0}
+  .flow-node{width:26px;height:26px;border:1px solid var(--line-2);border-radius:8px;flex:none;
+    display:grid;place-items:center;font-family:var(--mono);font-size:10px;
+    color:var(--muted-2);background:var(--surface-2);margin-top:1px}
+  .flow-row.ok .flow-node{background:var(--pos);border-color:var(--pos);color:#fff}
+  .flow-row.warn .flow-node{background:var(--warn);border-color:var(--warn);color:#fff}
+  .flow-row.info .flow-node{background:var(--brand);border-color:var(--brand);color:#fff}
+  .flow-body{min-width:0;flex:1}
+  .flow-body .txt{font-size:13px;color:#3b4166;line-height:1.55;word-break:break-word}
+  .flow-row.warn .flow-body .txt{color:var(--warn);font-weight:600}
+  .flow-body .meta{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);margin-top:5px}
+
+  /* ---------- 键值对 ---------- */
+  .kv{display:flex;flex-direction:column}
+  .kv > div{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    border-bottom:1px solid var(--line);padding:11px 0;min-width:0}
+  .kv > div:last-child{border-bottom:0}
+  .kv dt{color:var(--muted);font-size:12px;flex:none}
+  .kv dd{font-family:var(--mono);font-size:11.5px;color:var(--ink);margin:0;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* ---------- 空态 ---------- */
+  .empty{border:1px dashed var(--line-2);border-radius:14px;background:var(--surface-2);
+    color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:8px;font-size:13px;min-height:180px;padding:30px;text-align:center}
+  .empty .ic{font-size:22px;color:var(--brand);opacity:.75}
+
+  /* ---------- 提示块 ---------- */
+  .callout{border:1px solid var(--line);border-left:3px solid var(--brand);background:var(--brand-soft);
+    color:#333a63;font-size:13px;line-height:1.68;padding:13px 16px;border-radius:10px}
+  .callout.warn{border-left-color:var(--warn);background:var(--warn-soft);color:#6b3f08}
+  .callout.err{border-left-color:var(--neg);background:var(--neg-soft);color:#8d1f2b}
+  .callout code,.note code{color:var(--brand-strong);font-family:var(--mono);font-size:12px;
+    background:rgba(61,90,254,.09);border-radius:4px;padding:1px 4px}
+  .note{color:var(--muted);font-size:12.5px;line-height:1.65;margin-top:13px}
+
+  pre.code{background:var(--ticket);border-radius:12px;color:#dfe3ff;font-family:var(--mono);
+    font-size:12px;line-height:1.8;overflow-x:auto;padding:16px 18px;margin-top:13px;
+    box-shadow:0 16px 34px -22px rgba(23,29,74,.7)}
+  pre.code .c{color:#8e97d8}
+  ol.howto{padding-left:20px;font-size:13.5px;display:flex;flex-direction:column;gap:10px;color:#3b4166}
+  ol.howto li::marker{color:var(--brand);font-weight:700}
+  ol.howto code{color:var(--brand-strong);font-family:var(--mono);font-size:12px}
+
+  /* ---------- 页脚 ---------- */
+  footer.site{border-top:1px solid var(--line);background:var(--surface)}
+  .site-footer{max-width:1360px;margin:0 auto;padding:24px clamp(18px,4vw,44px);
+    display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+    color:var(--muted-2);font-size:11.5px;letter-spacing:.04em}
+
+  /* ---------- 提示条 ---------- */
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);z-index:60;
+    background:var(--ticket);color:#fff;border-radius:10px;font-size:13px;font-weight:560;
+    padding:13px 20px;opacity:0;transition:opacity .22s,transform .22s;pointer-events:none;
+    max-width:90vw;box-shadow:0 20px 44px -20px rgba(23,29,74,.8)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:var(--neg)}
+
+  @media(max-width:760px){
+    .site-inner{flex-wrap:wrap;gap:12px;padding-top:13px;padding-bottom:13px}
+    .ticket{padding:30px 22px;border-radius:14px}
+    section{padding:32px 0}
+    .section-heading{align-items:flex-start;flex-direction:column;gap:10px}
+    .section-heading > p{text-align:left}
+    .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
+  }
+  /* ============ 主 SPA 专用（server.js 在此标记之前拼入 theme.js 的 TOKENS） ============ */
+
+  /* 导航：胶囊 chips，浮在纸面上 */
+  nav.tabs{position:sticky;top:60px;z-index:25;background:rgba(244,246,251,.88);
+    backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .tabs-inner{max-width:1360px;margin:0 auto;padding:11px clamp(18px,4vw,44px);
+    display:flex;gap:8px;overflow-x:auto}
+  nav.tabs button{background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    cursor:pointer;font-size:12.5px;font-weight:640;border-radius:999px;padding:8px 16px;
+    white-space:nowrap;box-shadow:var(--shadow-sm);
+    transition:background .16s,border-color .16s,color .16s}
+  nav.tabs button:hover{color:var(--ink);border-color:var(--line-2)}
+  nav.tabs button.active{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.field-row{grid-template-columns:1fr}nav.tabs{top:0}}
+  .agent-desc{color:var(--muted);font-size:12.5px;line-height:1.55}
+  .agent-tags{display:flex;flex-wrap:wrap;gap:6px}
+
+  /* 声誉探测（教学/诊断用的小卡） */
+  .probe{border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:14px 16px}
+  .probe + .probe{margin-top:9px}
+  .probe strong{font-family:var(--mono);font-size:12px;color:var(--ink)}
+  .probe small{display:block;color:var(--muted-2);font-size:11px;margin-top:5px;line-height:1.5}
+
+  /* 账户余额条 */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    overflow:hidden;box-shadow:var(--shadow-sm)}
+  .stats > div{border-right:1px solid var(--line);padding:18px 20px;min-width:0}
+  .stats > div:last-child{border-right:0}
+  .stats b{display:block;font-family:var(--serif);font-size:26px;font-weight:400;letter-spacing:-.03em;
+    line-height:1}
+  .stats b.pos{color:var(--pos)}
+  .stats span{display:block;color:var(--muted);font-size:11px;margin-top:9px;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  /* Agent 卡上的外链行 */
+  .pick-links{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;font-weight:600}
+  .pick-links a{font-family:var(--mono)}
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>AgentHub · 本地注册与交易平台</h1>
-    <div class="sub">ERC-8004 风格 · IdentityRegistry / ReputationRegistry + 订单与本地积分结算（对应 x402 支付层）</div>
-  </div>
-  <div style="display:flex;gap:10px;align-items:center">
-    <span class="chain-badge"><span class="dot"></span><span id="chainStat"></span></span>
-    <button class="btn btn-ghost btn-sm" onclick="resetAll()">重置数据</button>
+
+<header class="site">
+  <div class="site-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark">A</span>
+      <span>AgentHub</span>
+      <span class="version" data-i18n="app.version">v0.1 demo</span>
+    </a>
+    <div class="spacer"></div>
+    <div class="site-actions">
+      <div class="status online" id="chainChip"><span class="status-dot"></span><span id="chainStat">—</span></div>
+      <div class="langswitch" id="langSwitch" role="group" aria-label="Language">
+        <button type="button" data-lang="zh" class="active">中文</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+      <button class="btn btn-quiet btn-sm" onclick="resetAll()" data-i18n="app.reset">重置数据</button>
+    </div>
   </div>
 </header>
-<nav>
-  <button class="active" data-tab="registry" onclick="showTab('registry',this)">① 注册中心</button>
-  <button data-tab="market" onclick="showTab('market',this)">② 交易市场</button>
-  <button data-tab="explorer" onclick="showTab('explorer',this)">③ 链上账本</button>
-  <button data-tab="teach" onclick="showTab('teach',this)">④ 教学说明</button>
-</nav>
-<main>
 
+<!-- 票根撕口上的存根信息 -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span data-i18n="ticker.venue">结算场所</span>
+    <b>AgentHub Exchange</b>
+    <span class="ticker-sep">/</span>
+    <span data-i18n="ticker.settlement">结算单位</span>
+    <b>LGC</b>
+    <span class="ticker-sep">/</span>
+    <span data-i18n="ticker.gate">放款门禁</span>
+    <em id="tickerGate">RepuGate B3</em>
+    <span class="spacer"></span>
+    <span id="tickerNote" data-i18n="ticker.note">先验证声誉，再付款</span>
+  </div>
+</div>
+
+<nav class="tabs">
+  <div class="tabs-inner">
+    <button class="active" data-tab="registry" onclick="showTab('registry',this)" data-i18n="tab.registry">注册中心</button>
+    <button data-tab="market" onclick="showTab('market',this)" data-i18n="tab.market">交易市场</button>
+    <button data-tab="explorer" onclick="showTab('explorer',this)" data-i18n="tab.explorer">链上账本</button>
+    <button data-tab="teach" onclick="showTab('teach',this)" data-i18n="tab.teach">教学说明</button>
+  </div>
+</nav>
+
+<main id="top">
+
+<section class="ticket hero" id="landing">
+  <div class="eyebrow"><span></span><span data-i18n="hero.eyebrow">Reputation-gated agent commerce</span></div>
+  <h1 class="hero-title"><span data-i18n="hero.title1">先验证声誉，</span><em data-i18n="hero.titleEm">再付款。</em></h1>
+  <p class="hero-lede" data-i18n="hero.lede">AgentHub 把 ERC-8004 身份与声誉证据接到 x402 支付之前——买家下单后资金进入托管，RepuGate 门禁评估卖家声誉，只有通过才放款。</p>
+  <div class="hero-protocol">
+    <span data-i18n="hero.p1">ERC-8004</span><i></i>
+    <span data-i18n="hero.p2">B0 / B1 / B2 / B3</span><i></i>
+    <span data-i18n="hero.p3">放款门禁</span><i></i>
+    <span data-i18n="hero.p4">x402</span>
+  </div>
+</section>
+
+<section style="padding-top:26px;padding-bottom:28px">
+  <div class="metrics" id="statsBar"></div>
+</section>
+
+<!-- ==================== 注册中心 ==================== -->
 <section id="tab-registry">
-  <div class="grid2">
-    <div class="card">
-      <h2>注册新 Agent</h2>
-      <p class="muted">通过 UI 注册的 Agent 由平台代管档案页（无后端，执行为模拟）。想注册<b>有真实后端和自托管主页</b>的 Agent，见「④ 教学说明」运行示例 Agent。</p>
-      <label>名称</label><input id="regName" placeholder="例如：MyFirstAgent">
-      <label>描述</label><input id="regDesc" placeholder="这个 Agent 做什么">
-      <label>自托管主页 URL（可选，留空则平台代管）</label><input id="regHome" placeholder="http://localhost:8801">
-      <button class="btn btn-blue" onclick="registerAgent()">register() 上链</button>
+  <div class="grid grid-2-even">
+
+    <div class="panel">
+      <div class="section-heading" style="margin-bottom:20px">
+        <div>
+          <span class="section-index" data-i18n="reg.eyebrow">IdentityRegistry</span>
+          <h2 data-i18n="reg.title">注册新 Agent</h2>
+        </div>
+      </div>
+      <p class="note" style="margin:0 0 18px" data-i18n="reg.note">UI 注册的 Agent 由平台代管档案页。要注册带真实后端和自托管主页的 Agent，见「教学说明」。</p>
+      <div class="field" style="margin-bottom:12px">
+        <label data-i18n="reg.name">名称</label>
+        <input id="regName" data-i18n-ph="reg.namePh" placeholder="例如：MyFirstAgent">
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label data-i18n="reg.desc">描述</label>
+        <input id="regDesc" data-i18n-ph="reg.descPh" placeholder="这个 Agent 做什么">
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label><span data-i18n="reg.homepage">自托管主页 URL</span><span class="help" data-i18n="reg.optional">（可选）</span></label>
+        <input id="regHome" placeholder="http://localhost:8801">
+      </div>
+      <div class="field" style="margin-bottom:18px">
+        <label data-i18n="reg.scenario">RepuGate 声誉档案</label>
+        <select id="regScenario">
+          <option value="honest-service" data-i18n="scenario.honest">honest-service · 诚实服务（3 位真实付款好评）</option>
+          <option value="ungrounded-feedback" data-i18n="scenario.ungrounded">ungrounded-feedback · 无付款刷分（5 条虚假 100 分）</option>
+          <option value="receipt-replay" data-i18n="scenario.replay">receipt-replay · 凭证重放（1 张凭证刷 5 条）</option>
+          <option value="reviewer-concentration" data-i18n="scenario.concentration">reviewer-concentration · 评价者集中（1 人刷 5 条）</option>
+          <option value="offer-substitution" data-i18n="scenario.substitution">offer-substitution · 报价替换（金额被篡改）</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="registerAgent()">
+        <span data-i18n="reg.submit">register() 上链</span><span>→</span>
+      </button>
       <div id="regResult"></div>
     </div>
-    <div class="card">
-      <h2>声誉反馈</h2>
-      <p class="muted">对应 ReputationRegistry 的 giveFeedback()。</p>
-      <label>Agent</label><select id="fbAgent"></select>
-      <label>分值（-100 ~ 100）</label><input id="fbVal" type="number" value="90">
-      <label>备注</label><input id="fbNote" placeholder="任务完成质量评价">
-      <button class="btn btn-purple" onclick="giveFeedback()">giveFeedback()</button>
+
+    <div class="panel">
+      <div class="section-heading" style="margin-bottom:20px">
+        <div>
+          <span class="section-index" data-i18n="fb.eyebrow">ReputationRegistry</span>
+          <h2 data-i18n="fb.title">声誉反馈</h2>
+        </div>
+      </div>
+      <p class="note" style="margin:0 0 18px" data-i18n="fb.note">对应链上 giveFeedback()，用于演示声誉信号的产生。</p>
+      <div class="field" style="margin-bottom:12px">
+        <label data-i18n="fb.agent">Agent</label>
+        <select id="fbAgent"></select>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label data-i18n="fb.value">分值（-100 ~ 100）</label>
+        <input id="fbVal" type="number" value="90">
+      </div>
+      <div class="field" style="margin-bottom:18px">
+        <label data-i18n="fb.noteLabel">备注</label>
+        <input id="fbNote" data-i18n-ph="fb.notePh" placeholder="任务完成质量评价">
+      </div>
+      <button class="btn" style="width:100%" onclick="giveFeedback()">
+        <span data-i18n="fb.submit">giveFeedback()</span>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="section-heading" style="margin-top:34px">
+    <div>
+      <span class="section-index" data-i18n="agents.eyebrow">Onchain identities</span>
+      <h2 data-i18n="agents.title">已注册 Agent</h2>
+    </div>
+    <p><span class="tag tag-green" id="agentCount">—</span></p>
+  </div>
+  <div class="pick-grid" id="agentList"></div>
+</section>
+
+<!-- ==================== 交易市场 ==================== -->
+<section id="tab-market" style="display:none">
+
+  <div class="section-heading">
+    <div>
+      <span class="section-index" data-i18n="market.creditsEyebrow">Local settlement</span>
+      <h2 data-i18n="market.creditsTitle">账户与本地积分（LGC）</h2>
+    </div>
+    <p data-i18n="market.creditsNote">本地积分模拟 x402 支付层。下单后资金进入托管，RepuGate 门禁通过才放款给卖家。</p>
+  </div>
+  <div class="stats" id="creditPanel"></div>
+
+  <div class="section-heading" style="margin-top:38px">
+    <div>
+      <span class="section-index" data-i18n="market.gateEyebrow">RepuGate payout gate</span>
+      <h2 data-i18n="market.gateTitle">放款门禁模型</h2>
+    </div>
+    <p data-i18n="market.gateNote">选择用于评估卖家声誉的模型。同一卖家在不同模型下可能得到不同结果。</p>
+  </div>
+  <div class="model-grid" id="gateModel">
+    <button type="button" class="model-card" data-model="B0_NO_GATE">
+      <span class="code">B0</span>
+      <strong data-i18n="model.b0t">无门禁</strong>
+      <small data-i18n="model.b0d">任何卖家都直接放款，用于对照实验的基线。</small>
+    </button>
+    <button type="button" class="model-card" data-model="B1_RAW">
+      <span class="code">B1</span>
+      <strong data-i18n="model.b1t">原始声誉</strong>
+      <small data-i18n="model.b1d">只看平均分，不看评分是否真实付款。</small>
+    </button>
+    <button type="button" class="model-card" data-model="B2_GROUNDED">
+      <span class="code">B2</span>
+      <strong data-i18n="model.b2t">付款实证</strong>
+      <small data-i18n="model.b2d">只采信有真实付款凭证支撑的评分。</small>
+    </button>
+    <button type="button" class="model-card active" data-model="B3_REPUGATE">
+      <span class="code">B3</span>
+      <strong data-i18n="model.b3t">RepuGate</strong>
+      <small data-i18n="model.b3d">综合实证、凭证去重与评价者分布，推荐使用。</small>
+      <span class="tag tag-green" data-i18n="model.recommended">推荐</span>
+      <span class="check">✓</span>
+    </button>
+    <button type="button" class="model-card" data-model="B3_DIRICHLET">
+      <span class="code">B3</span>
+      <strong data-i18n="model.b3dt">Dirichlet</strong>
+      <small data-i18n="model.b3dd">贝叶斯置信度估计，样本少时更保守。</small>
+      <span class="check">✓</span>
+    </button>
+  </div>
+  <div id="gateStatus" style="margin-top:14px"></div>
+
+  <div class="section-heading" style="margin-top:38px">
+    <div>
+      <span class="section-index" data-i18n="market.skillsEyebrow">Service marketplace</span>
+      <h2 data-i18n="market.skillsTitle">服务市场</h2>
     </div>
   </div>
-  <div class="card">
-    <h2>已注册 Agent</h2>
-    <div class="grid2" id="agentList"></div>
+  <div class="table-wrap"><table id="skillTable"></table></div>
+  <div id="orderLog"></div>
+
+  <div class="section-heading" style="margin-top:38px">
+    <div>
+      <span class="section-index" data-i18n="market.ordersEyebrow">Order history</span>
+      <h2 data-i18n="market.ordersTitle">订单历史</h2>
+    </div>
   </div>
+  <div class="table-wrap"><table id="orderTable"></table></div>
 </section>
 
-<section id="tab-market" style="display:none">
-  <div class="card">
-    <h2>账户与本地积分（LGC）</h2>
-    <p class="muted">本地积分模拟 x402 支付层：下单 → 托管 → agent 执行 → 放款。真实 ERC-8004 标准不含支付，这里用本地结算演示完整商业闭环。</p>
-    <div class="stat-row" id="creditPanel"></div>
-  </div>
-  <div class="card">
-    <h2>服务市场</h2>
-    <table id="skillTable"></table>
-    <div id="orderLog"></div>
-  </div>
-  <div class="card">
-    <h2>订单历史</h2>
-    <table id="orderTable"></table>
-  </div>
-</section>
-
+<!-- ==================== 链上账本 ==================== -->
 <section id="tab-explorer" style="display:none">
-  <div class="card">
-    <h2>事件账本（模拟链）</h2>
-    <p class="muted">Register / ServiceListed / OrderCreated / PaymentReleased / GiveFeedback</p>
-    <table id="txTable"></table>
+  <div class="section-heading">
+    <div>
+      <span class="section-index" data-i18n="explorer.eyebrow">Simulated chain</span>
+      <h2 data-i18n="explorer.title">事件账本</h2>
+    </div>
+    <p data-i18n="explorer.note">所有注册、上架、下单、门禁评估与放款都会在这里留下不可篡改的事件记录。</p>
   </div>
+  <div class="table-wrap"><table id="txTable"></table></div>
 </section>
 
+<!-- ==================== 教学说明 ==================== -->
 <section id="tab-teach" style="display:none">
-  <div class="card">
-    <h2>如何运行一个"有自己主页"的真实 Agent</h2>
-    <p class="muted">本目录 <span class="mono">agents/demo-agent.js</span> 就是一个可运行的示例。它会：<b>① 启动自己的 HTTP 服务和主页</b> → <b>② 公开 agent-card.json</b> → <b>③ 启动时自动注册到本平台（幂等，重启不重复）</b> → <b>④ 接受市场订单并真实执行</b>。</p>
-    <pre class="mono" style="background:#FAFAF7;border:1px solid var(--border);border-radius:8px;padding:12px;margin:10px 0;overflow-x:auto">node agents/demo-agent.js --port 8801 --name "NovaBot 行情助手" --role oracle
-node agents/demo-agent.js --port 8802 --name "LyraBot 分析师" --role analyst</pre>
-    <h2 style="margin-top:16px">改造你自己的 Agent</h2>
-    <ol style="padding-left:20px;font-size:13px">
-      <li>打开 <span class="mono">demo-agent.js</span>，在 <span class="mono">SKILLS</span> 配置里加你的技能（id / 名称 / 描述 / 价格）。</li>
-      <li>在 <span class="mono">handleExecute()</span> 里写你的技能逻辑（可以调 OpenAI API、查数据库、任何 Node 能做的事）。</li>
-      <li>改 <span class="mono">--name</span> 和主页 HTML 模板（<span class="mono">homePage()</span> 函数），保存重启即可。</li>
-      <li>Agent 启动后自动出现在平台的市场里，其他 Agent 或买家就能购买它的技能。</li>
-    </ol>
-    <h2 style="margin-top:16px">与真实 ERC-8004 的对应关系</h2>
-    <table>
-      <tr><th>本平台（模拟）</th><th>真实 ERC-8004</th></tr>
-      <tr><td>POST /api/register</td><td>IdentityRegistry.register(agentURI)，真实地址见 Sepolia 脚本</td></tr>
-      <tr><td>/api/agents/:id/card</td><td>agentURI 指向的注册 JSON（格式一致）</td></tr>
-      <tr><td>giveFeedback 事件</td><td>ReputationRegistry.giveFeedback()</td></tr>
-      <tr><td>OrderCreated / PaymentReleased（本地积分）</td><td>标准外 · 真实世界用 x402 支付</td></tr>
-      <tr><td>模拟链账本</td><td>真实链上 Events（Etherscan 可查）</td></tr>
-    </table>
-    <div class="hint">想把注册记录写到真实区块链？查看 <span class="mono">sepolia/README-注册指南.md</span>，用 Sepolia 测试网免费体验真实的 register() 交易。</div>
+  <div class="section-heading">
+    <div>
+      <span class="section-index" data-i18n="teach.eyebrow">Getting started</span>
+      <h2 data-i18n="teach.title">运行一个有自己主页的真实 Agent</h2>
+    </div>
+    <p data-i18n="teach.note">agents/demo-agent.js 是可运行的示例：启动 HTTP 服务与主页 → 公开 agent-card.json → 自动幂等注册到平台 → 接受订单并真实执行。</p>
+  </div>
+  <pre class="code"><span class="c"># 诚实 Agent（B3 门禁会放行）</span>
+node agents/demo-agent.js --port 8801 --name "NovaBot" --role oracle --scenario honest-service
+
+<span class="c"># 刷分 Agent（B3 门禁会拦截）</span>
+node agents/demo-agent.js --port 8802 --name "FakeBot" --role oracle --scenario ungrounded-feedback</pre>
+
+  <div class="section-heading" style="margin-top:38px">
+    <div>
+      <span class="section-index" data-i18n="teach.modEyebrow">Customize</span>
+      <h2 data-i18n="teach.modTitle">改造你自己的 Agent</h2>
+    </div>
+  </div>
+  <ol class="howto">
+    <li data-i18n="teach.step1">打开 demo-agent.js，在 SKILLS 配置里加你的技能（id / 名称 / 描述 / 价格）。</li>
+    <li data-i18n="teach.step2">在 handleExecute() 里写你的技能逻辑（可调 OpenAI API、查数据库，任何 Node 能做的事）。</li>
+    <li data-i18n="teach.step3">改 --name、--scenario 和 homePage() 里的 HTML 模板，保存重启即可。</li>
+    <li data-i18n="teach.step4">Agent 启动后自动出现在市场里，其他 Agent 或买家就能购买它的技能。</li>
+  </ol>
+
+  <div class="section-heading" style="margin-top:38px">
+    <div>
+      <span class="section-index" data-i18n="teach.mapEyebrow">Spec mapping</span>
+      <h2 data-i18n="teach.mapTitle">与真实 ERC-8004 的对应关系</h2>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table id="teachTable"></table>
+  </div>
+  <div class="callout" style="margin-top:14px" data-i18n="teach.hint">
+    想体验真实链上注册？查看 sepolia/README-注册指南.md，用 Sepolia 测试网免费提交一笔真实的 register() 交易。
   </div>
 </section>
 
 </main>
+
+<footer class="site">
+  <div class="site-footer">
+    <span data-i18n="footer.left">AgentHub · 本地 ERC-8004 风格注册与交易平台</span>
+    <span data-i18n="footer.right">RepuGate payout gate · local LGC settlement</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
 <script>
-let S=null, tab='registry';
-const api=(p,opt)=>fetch('/api'+p,{headers:{'Content-Type':'application/json'},...opt}).then(r=>r.json());
-
-function showTab(t,btn){tab=t;document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  ['registry','market','explorer','teach'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'':'none');
-  if(t==='market')renderMarket(); if(t==='explorer')renderLedger();}
-
-async function refresh(){S=await api('/state');renderRegistry();if(tab==='market')renderMarket();if(tab==='explorer')renderLedger();}
-
-function renderRegistry(){
-  document.getElementById('chainStat').textContent='本地链 · 区块 #'+S.block+' · '+S.agents.length+' agents';
-  const sel=document.getElementById('fbAgent');
-  sel.innerHTML=S.agents.map(a=>'<option value="'+a.id+'">#'+a.id+' '+a.name+'</option>').join('');
-  document.getElementById('agentList').innerHTML=S.agents.map(a=>{
-    const fb=a.feedbacks.length?(a.feedbacks.reduce((s,f)=>s+f.value,0)/a.feedbacks.length).toFixed(1):'—';
-    return '<div class="agent-card"><b class="name">'+a.name+'</b> <span class="mono muted">#'+a.id+'</span><br>'+
-    '<span class="badge '+(a.homepage?'b-teal':'b-gray')+'">'+(a.homepage?'自托管主页':'平台代管')+'</span>'+
-    '<span class="badge b-blue">'+a.skills.length+' 个技能</span>'+
-    '<span class="badge '+(fb!=='—'&&fb>=60?'b-teal':'b-amber')+'">声誉 '+fb+'</span>'+
-    '<div class="muted" style="margin:6px 0">'+a.desc+'</div>'+
-    '<div class="mono muted">owner: '+a.owner.slice(0,10)+'…'+a.owner.slice(-4)+'</div>'+
-    '<div style="margin-top:8px"><a href="/agent/'+a.id+'">平台档案页</a>'+
-    (a.homepage?' · <a href="'+a.homepage+'" target="_blank">Agent 主页</a>':'')+
-    ' · <a href="/api/agents/'+a.id+'/card" target="_blank">agent-card.json</a></div></div>';
-  }).join('')||'<div class="empty">还没有 Agent — 运行示例 Agent 或用左侧表单注册</div>';
-}
-
-function renderMarket(){
-  const cr=Object.entries(S.credits).map(([k,v])=>'<div class="stat"><b>'+v+' LGC</b><span class="muted">'+
-    (k==='0xA11cE0000000000000000000000000000000c0dE'?'演示买家':k.slice(0,8)+'…（'+(S.agents.find(a=>a.owner===k)||{name:'?'}).name+'）')+'</span></div>').join('');
-  document.getElementById('creditPanel').innerHTML=cr;
-  const rows=[];
-  S.agents.forEach(a=>a.skills.forEach(s=>{
-    rows.push('<tr><td><b>'+a.name+'</b> <span class="mono muted">#'+a.id+'</span><br><span class="muted">'+s.desc+'</span></td>'+
-    '<td>'+s.name+'</td><td class="price">'+s.price+' LGC</td>'+
-    '<td><button class="btn btn-blue btn-sm" onclick="buy(\'client\','+a.id+',\''+s.id+'\')">买家购买</button> '+
-    (S.agents.length>1?'<button class="btn btn-purple btn-sm" onclick="buy(\'agent:auto\','+a.id+',\''+s.id+'\')">让其他 Agent 代购</button>':'')+'</td></tr>');
-  }));
-  document.getElementById('skillTable').innerHTML='<tr><th>卖家 Agent</th><th>技能</th><th>价格</th><th>操作</th></tr>'+
-    (rows.join('')||'<tr><td colspan="4" class="empty">市场上还没有服务</td></tr>');
-  document.getElementById('orderTable').innerHTML='<tr><th>#</th><th>买家</th><th>卖家 · 技能</th><th>金额</th><th>方式</th></tr>'+
-    (S.orders.map(o=>'<tr><td class="mono">#'+o.id+'</td><td>'+o.buyerLabel+'</td><td>'+o.agentName+' · '+o.skill+'</td><td class="price">'+o.price+' LGC</td><td>'+(o.live?'<span class="badge b-teal">真实调用</span>':'<span class="badge b-gray">模拟</span>')+'</td></tr>').join('')||'<tr><td colspan="5" class="empty">暂无订单</td></tr>');
-}
-
-function renderLedger(){
-  document.getElementById('txTable').innerHTML='<tr><th>区块</th><th>哈希</th><th>事件</th><th>数据</th></tr>'+
-    S.ledger.map(x=>{const c=x.ev.startsWith('Reg')||x.ev.startsWith('Service')?'var(--blue)':x.ev.startsWith('Give')?'var(--purple)':x.ev.startsWith('Order')?'var(--amber)':'var(--teal)';
-    return '<tr><td class="mono">#'+x.block+'</td><td><span class="hash">'+x.hash.slice(0,12)+'…</span></td><td><b class="mono" style="color:'+c+'">'+x.ev+'</b></td><td class="mono" style="font-size:11.5px">'+x.data+'</td></tr>';}).join('')
-    ||'<tr><td colspan="4" class="empty">账本为空</td></tr>';
-}
-
-async function registerAgent(){
-  const name=document.getElementById('regName').value.trim();
-  if(!name)return alert('请填写名称');
-  const r=await api('/register',{method:'POST',body:JSON.stringify({name,desc:document.getElementById('regDesc').value.trim(),homepage:document.getElementById('regHome').value.trim()||null})});
-  document.getElementById('regResult').innerHTML='<div class="status-line ok">注册成功 ✓ agentId='+r.agentId+' — <a href="/agent/'+r.agentId+'">查看档案页</a></div>';
-  refresh();
-}
-async function giveFeedback(){
-  const r=await api('/feedback',{method:'POST',body:JSON.stringify({agentId:+document.getElementById('fbAgent').value,value:+document.getElementById('fbVal').value,note:document.getElementById('fbNote').value.trim()})});
-  alert(r.ok?'反馈已上链 ✓':'失败: '+r.error);refresh();
-}
-async function buy(buyerKey,agentId,skillId){
-  if(buyerKey==='agent:auto'){
-    const others=S.agents.filter(a=>a.id!==agentId);
-    if(!others.length)return alert('没有其他 Agent 可代购');
-    buyerKey='agent:'+others[0].id;
+/* ==================== i18n ==================== */
+const I18N = {
+  zh: {
+    'app.title':'AgentHub', 'app.version':'v0.1 demo', 'app.reset':'重置数据',
+    'hero.eyebrow':'Reputation-gated agent commerce',
+    'hero.title1':'先验证声誉，','hero.titleEm':'再付款。',
+    'hero.lede':'AgentHub 把 ERC-8004 身份与声誉证据接到 x402 支付之前——买家下单后资金进入托管，RepuGate 门禁评估卖家声誉，只有通过才放款。',
+    'hero.p1':'ERC-8004', 'hero.p2':'B0 / B1 / B2 / B3', 'hero.p3':'放款门禁', 'hero.p4':'x402',
+    'stat.agents':'已注册 Agent', 'stat.skills':'在售技能', 'stat.orders':'累计订单',
+    'stat.allowed':'放行', 'stat.blocked':'拦截', 'stat.gate':'门禁状态',
+    'stat.gateOn':'已接入', 'stat.gateOff':'未连接', 'stat.events':'链上事件',
+    'tab.registry':'注册中心', 'tab.market':'交易市场', 'tab.explorer':'链上账本', 'tab.teach':'教学说明',
+    'reg.eyebrow':'IdentityRegistry', 'reg.title':'注册新 Agent',
+    'reg.note':'UI 注册的 Agent 由平台代管档案页。要注册带真实后端和自托管主页的 Agent，见「教学说明」。',
+    'reg.name':'名称', 'reg.namePh':'例如：MyFirstAgent', 'reg.desc':'描述', 'reg.descPh':'这个 Agent 做什么',
+    'reg.homepage':'自托管主页 URL', 'reg.optional':'（可选）', 'reg.scenario':'RepuGate 声誉档案',
+    'reg.submit':'register() 上链',
+    'scenario.honest':'honest-service · 诚实服务（3 位真实付款好评）',
+    'scenario.ungrounded':'ungrounded-feedback · 无付款刷分（5 条虚假 100 分）',
+    'scenario.replay':'receipt-replay · 凭证重放（1 张凭证刷 5 条）',
+    'scenario.concentration':'reviewer-concentration · 评价者集中（1 人刷 5 条）',
+    'scenario.substitution':'offer-substitution · 报价替换（金额被篡改）',
+    'fb.eyebrow':'ReputationRegistry', 'fb.title':'声誉反馈',
+    'fb.note':'对应链上 giveFeedback()，用于演示声誉信号的产生。',
+    'fb.agent':'Agent', 'fb.value':'分值（-100 ~ 100）', 'fb.noteLabel':'备注', 'fb.notePh':'任务完成质量评价',
+    'fb.submit':'giveFeedback()',
+    'agents.eyebrow':'Onchain identities', 'agents.title':'已注册 Agent',
+    'market.creditsEyebrow':'Local settlement', 'market.creditsTitle':'账户与本地积分（LGC）',
+    'market.creditsNote':'本地积分模拟 x402 支付层。下单后资金进入托管，RepuGate 门禁通过才放款给卖家。',
+    'market.gateEyebrow':'RepuGate payout gate', 'market.gateTitle':'放款门禁模型',
+    'market.gateNote':'选择用于评估卖家声誉的模型。同一卖家在不同模型下可能得到不同结果。',
+    'market.skillsEyebrow':'Service marketplace', 'market.skillsTitle':'服务市场',
+    'market.ordersEyebrow':'Order history', 'market.ordersTitle':'订单历史',
+    'model.b0t':'无门禁', 'model.b0d':'任何卖家都直接放款，用于对照实验的基线。',
+    'model.b1t':'原始声誉', 'model.b1d':'只看平均分，不看评分是否真实付款。',
+    'model.b2t':'付款实证', 'model.b2d':'只采信有真实付款凭证支撑的评分。',
+    'model.b3t':'RepuGate', 'model.b3d':'综合实证、凭证去重与评价者分布，推荐使用。',
+    'model.b3dt':'Dirichlet', 'model.b3dd':'贝叶斯置信度估计，样本少时更保守。',
+    'model.recommended':'推荐',
+    'ticker.venue':'结算场所', 'ticker.settlement':'结算单位', 'ticker.gate':'放款门禁',
+    'ticker.note':'先验证声誉，再付款',
+    'explorer.eyebrow':'Simulated chain', 'explorer.title':'事件账本',
+    'explorer.note':'所有注册、上架、下单、门禁评估与放款都会在这里留下不可篡改的事件记录。',
+    'teach.eyebrow':'Getting started', 'teach.title':'运行一个有自己主页的真实 Agent',
+    'teach.note':'agents/demo-agent.js 是可运行的示例：启动 HTTP 服务与主页 → 公开 agent-card.json → 自动幂等注册到平台 → 接受订单并真实执行。',
+    'teach.modEyebrow':'Customize', 'teach.modTitle':'改造你自己的 Agent',
+    'teach.step1':'打开 demo-agent.js，在 SKILLS 配置里加你的技能（id / 名称 / 描述 / 价格）。',
+    'teach.step2':'在 handleExecute() 里写你的技能逻辑（可调 OpenAI API、查数据库，任何 Node 能做的事）。',
+    'teach.step3':'改 --name、--scenario 和 homePage() 里的 HTML 模板，保存重启即可。',
+    'teach.step4':'Agent 启动后自动出现在市场里，其他 Agent 或买家就能购买它的技能。',
+    'teach.mapEyebrow':'Spec mapping', 'teach.mapTitle':'与真实 ERC-8004 的对应关系',
+    'teach.hint':'想体验真实链上注册？查看 sepolia/README-注册指南.md，用 Sepolia 测试网免费提交一笔真实的 register() 交易。',
+    'footer.left':'AgentHub · 本地 ERC-8004 风格注册与交易平台', 'footer.right':'RepuGate payout gate · local LGC settlement',
+    'gate.model':'门禁模型',
+    'agent.avg':'均分 {v}',
+    'reg.ok':'已注册',
+    'chain.blocks':'本地链 · 区块 #{b} · {n} 个 Agent',
+    'gate.on':'RepuGate 门禁已接入 · {url}', 'gate.off':'RepuGate 门禁未连接（放款将保持托管）',
+    'gate.probing':'正在检测 RepuGate 门禁…',
+    'agent.selfHosted':'自托管主页', 'agent.platformHosted':'平台代管', 'agent.skills':'{n} 个技能',
+    'agent.score':'声誉 {v}', 'agent.scenario':'档案 {v}',
+    'agent.profile':'平台档案页', 'agent.home':'Agent 主页', 'agent.card':'agent-card.json',
+    'agent.none':'还没有 Agent — 运行示例 Agent 或用左侧表单注册',
+    'agent.noneSub':'示例：node agents/demo-agent.js --port 8801 --name "NovaBot"',
+    'credit.you':'演示买家', 'credit.balance':'{v} LGC',
+    'skill.seller':'卖家 Agent', 'skill.name':'技能', 'skill.desc':'说明', 'skill.price':'价格', 'skill.action':'操作',
+    'skill.buy':'买家购买', 'skill.buyAsAgent':'让其他 Agent 代购',
+    'skill.none':'市场上还没有服务', 'skill.noneSub':'注册一个带技能的 Agent 后，这里会出现可购买的服务',
+    'order.id':'#', 'order.buyer':'买家', 'order.seller':'卖家 · 技能', 'order.amount':'金额',
+    'order.mode':'方式', 'order.gate':'RepuGate 门禁',
+    'order.live':'真实调用', 'order.simulated':'模拟',
+    'status.RELEASED':'ALLOW 放款', 'status.BLOCKED':'BLOCK 已退款', 'status.REVIEW':'REVIEW 托管中',
+    'order.none':'暂无订单', 'order.noneSub':'到「服务市场」挑一个服务下单，门禁结果会显示在这里',
+    'log.title':'订单执行链路',
+    'log.starting':'下单中…（RepuGate 门禁评估）',
+    'tx.block':'区块', 'tx.hash':'哈希', 'tx.event':'事件', 'tx.data':'数据', 'tx.none':'账本为空',
+    'teach.m1':'本平台（模拟）', 'teach.m2':'真实 ERC-8004',
+    'teach.r1a':'POST /api/register', 'teach.r1b':'IdentityRegistry.register(agentURI)，真实地址见 Sepolia 脚本',
+    'teach.r2a':'/api/agents/:id/card', 'teach.r2b':'agentURI 指向的注册 JSON（格式一致）',
+    'teach.r3a':'giveFeedback 事件', 'teach.r3b':'ReputationRegistry.giveFeedback()',
+    'teach.r4a':'OrderCreated / PaymentReleased（本地积分）', 'teach.r4b':'标准外 · 真实世界用 x402 支付',
+    'teach.r5a':'模拟链账本', 'teach.r5b':'真实链上 Events（Etherscan 可查）',
+    'msg.regOk':'注册成功 · agentId={id}', 'msg.regView':'查看档案页', 'msg.regNeedName':'请填写名称',
+    'msg.fbOk':'反馈已上链', 'msg.fail':'失败：{e}', 'msg.needOther':'没有其他 Agent 可代购',
+    'msg.reset':'重置全部数据？（Agent 需重启进程重新注册）',
+    'msg.gateBlocked':'放款被门禁拦截，资金已退回买家', 'msg.gateHeld':'付款保持托管，等待人工复核',
+    'msg.gateReleased':'门禁放行，已向卖家放款', 'msg.loadFailed':'数据加载失败：{e}'
+  },
+  en: {
+    'app.title':'AgentHub', 'app.version':'v0.1 demo', 'app.reset':'Reset data',
+    'hero.eyebrow':'Reputation-gated agent commerce',
+    'hero.title1':'Trust before ','hero.titleEm':'transaction.',
+    'hero.lede':'AgentHub puts ERC-8004 identity and reputation evidence in front of x402 payment — funds are escrowed on order, the RepuGate gate assesses seller reputation, and the payout only happens when it passes.',
+    'hero.p1':'ERC-8004', 'hero.p2':'B0 / B1 / B2 / B3', 'hero.p3':'payout gate', 'hero.p4':'x402',
+    'stat.agents':'Agents registered', 'stat.skills':'Skills listed', 'stat.orders':'Orders placed',
+    'stat.allowed':'Allowed', 'stat.blocked':'Blocked', 'stat.gate':'Gate status',
+    'stat.gateOn':'connected', 'stat.gateOff':'offline', 'stat.events':'Ledger events',
+    'tab.registry':'Registry', 'tab.market':'Marketplace', 'tab.explorer':'Ledger', 'tab.teach':'Guide',
+    'reg.eyebrow':'IdentityRegistry', 'reg.title':'Register a new agent',
+    'reg.note':'Agents registered here get a platform-hosted profile page. To register an agent with a real backend and self-hosted homepage, see the Guide tab.',
+    'reg.name':'Name', 'reg.namePh':'e.g. MyFirstAgent', 'reg.desc':'Description', 'reg.descPh':'What does this agent do',
+    'reg.homepage':'Self-hosted homepage URL', 'reg.optional':'(optional)', 'reg.scenario':'RepuGate reputation profile',
+    'reg.submit':'register() onchain',
+    'scenario.honest':'honest-service · honest service (3 payment-grounded reviews)',
+    'scenario.ungrounded':'ungrounded-feedback · ungrounded ratings (5 fake 100s)',
+    'scenario.replay':'receipt-replay · receipt replay (1 receipt, 5 reviews)',
+    'scenario.concentration':'reviewer-concentration · reviewer concentration (1 reviewer, 5 reviews)',
+    'scenario.substitution':'offer-substitution · offer substitution (amount tampered)',
+    'fb.eyebrow':'ReputationRegistry', 'fb.title':'Reputation feedback',
+    'fb.note':'Maps to onchain giveFeedback(), used to demonstrate how reputation signals are produced.',
+    'fb.agent':'Agent', 'fb.value':'Value (-100 ~ 100)', 'fb.noteLabel':'Note', 'fb.notePh':'Quality of task completion',
+    'fb.submit':'giveFeedback()',
+    'agents.eyebrow':'Onchain identities', 'agents.title':'Registered agents',
+    'market.creditsEyebrow':'Local settlement', 'market.creditsTitle':'Accounts & local credits (LGC)',
+    'market.creditsNote':'Local credits simulate the x402 payment layer. Funds are escrowed on order and released to the seller only when the RepuGate gate allows it.',
+    'market.gateEyebrow':'RepuGate payout gate', 'market.gateTitle':'Payout gate model',
+    'market.gateNote':'Choose the model used to assess seller reputation. The same seller can produce different outcomes per model.',
+    'market.skillsEyebrow':'Service marketplace', 'market.skillsTitle':'Service marketplace',
+    'market.ordersEyebrow':'Order history', 'market.ordersTitle':'Order history',
+    'model.b0t':'No gate', 'model.b0d':'Pays any seller unconditionally — the control baseline.',
+    'model.b1t':'Raw reputation', 'model.b1d':'Looks at the average score only, ignoring whether ratings were paid.',
+    'model.b2t':'Payment-grounded', 'model.b2d':'Trusts only ratings backed by a real payment receipt.',
+    'model.b3t':'RepuGate', 'model.b3d':'Combines grounding, receipt dedup and reviewer spread. Recommended.',
+    'model.b3dt':'Dirichlet', 'model.b3dd':'Bayesian confidence estimate; more conservative on thin evidence.',
+    'model.recommended':'Recommended',
+    'ticker.venue':'Venue', 'ticker.settlement':'Settlement unit', 'ticker.gate':'Payout gate',
+    'ticker.note':'Trust verified before payment',
+    'explorer.eyebrow':'Simulated chain', 'explorer.title':'Event ledger',
+    'explorer.note':'Registrations, listings, orders, gate evaluations and payouts all leave an immutable event trail here.',
+    'teach.eyebrow':'Getting started', 'teach.title':'Run a real agent with its own homepage',
+    'teach.note':'agents/demo-agent.js is a runnable example: it starts an HTTP service and homepage → exposes agent-card.json → auto-registers idempotently → accepts orders and executes them for real.',
+    'teach.modEyebrow':'Customize', 'teach.modTitle':'Build your own agent',
+    'teach.step1':'Open demo-agent.js and add your skills to the SKILLS config (id / name / description / price).',
+    'teach.step2':'Implement your skill logic in handleExecute() — call OpenAI, query a database, anything Node can do.',
+    'teach.step3':'Change --name, --scenario and the HTML template in homePage(), then save and restart.',
+    'teach.step4':'Your agent shows up in the marketplace automatically, ready to be purchased by buyers or other agents.',
+    'teach.mapEyebrow':'Spec mapping', 'teach.mapTitle':'How this maps to real ERC-8004',
+    'teach.hint':'Want a real onchain registration? See sepolia/README-注册指南.md and submit a real register() transaction on the Sepolia testnet for free.',
+    'footer.left':'AgentHub · local ERC-8004-style registry & marketplace', 'footer.right':'RepuGate payout gate · local LGC settlement',
+    'gate.model':'Gate model',
+    'agent.avg':'Avg {v}',
+    'reg.ok':'Registered',
+    'chain.blocks':'Local chain · block #{b} · {n} agents',
+    'gate.on':'RepuGate gate connected · {url}', 'gate.off':'RepuGate gate unavailable (payouts stay escrowed)',
+    'gate.probing':'Checking RepuGate gate…',
+    'agent.selfHosted':'Self-hosted', 'agent.platformHosted':'Platform-hosted', 'agent.skills':'{n} skills',
+    'agent.score':'Score {v}', 'agent.scenario':'Profile {v}',
+    'agent.profile':'Profile page', 'agent.home':'Agent homepage', 'agent.card':'agent-card.json',
+    'agent.none':'No agents yet — run the example agent or use the form on the left',
+    'agent.noneSub':'Example: node agents/demo-agent.js --port 8801 --name "NovaBot"',
+    'credit.you':'Demo buyer', 'credit.balance':'{v} LGC',
+    'skill.seller':'Seller agent', 'skill.name':'Skill', 'skill.desc':'Description', 'skill.price':'Price', 'skill.action':'Action',
+    'skill.buy':'Buy as buyer', 'skill.buyAsAgent':'Buy via another agent',
+    'skill.none':'No services listed yet', 'skill.noneSub':'Register an agent with skills and its services will appear here',
+    'order.id':'#', 'order.buyer':'Buyer', 'order.seller':'Seller · skill', 'order.amount':'Amount',
+    'order.mode':'Mode', 'order.gate':'RepuGate gate',
+    'order.live':'Live call', 'order.simulated':'Simulated',
+    'status.RELEASED':'ALLOW · paid', 'status.BLOCKED':'BLOCK · refunded', 'status.REVIEW':'REVIEW · held',
+    'order.none':'No orders yet', 'order.noneSub':'Buy a service from the marketplace and its gate outcome will appear here',
+    'log.title':'Order execution trail',
+    'log.starting':'Placing order… (RepuGate gate evaluation)',
+    'tx.block':'Block', 'tx.hash':'Hash', 'tx.event':'Event', 'tx.data':'Data', 'tx.none':'Ledger is empty',
+    'teach.m1':'This platform (simulated)', 'teach.m2':'Real ERC-8004',
+    'teach.r1a':'POST /api/register', 'teach.r1b':'IdentityRegistry.register(agentURI); real address in the Sepolia script',
+    'teach.r2a':'/api/agents/:id/card', 'teach.r2b':'the registration JSON pointed to by agentURI (same format)',
+    'teach.r3a':'giveFeedback event', 'teach.r3b':'ReputationRegistry.giveFeedback()',
+    'teach.r4a':'OrderCreated / PaymentReleased (local credits)', 'teach.r4b':'outside the standard; the real world uses x402 payments',
+    'teach.r5a':'Simulated ledger', 'teach.r5b':'real onchain events (visible on Etherscan)',
+    'msg.regOk':'Registered · agentId={id}', 'msg.regView':'View profile', 'msg.regNeedName':'Please enter a name',
+    'msg.fbOk':'Feedback recorded onchain', 'msg.fail':'Failed: {e}', 'msg.needOther':'No other agent available to buy',
+    'msg.reset':'Reset all data? (agents must restart to re-register)',
+    'msg.gateBlocked':'Payout blocked by the gate; funds refunded to the buyer',
+    'msg.gateHeld':'Payment remains escrowed pending manual review',
+    'msg.gateReleased':'Gate allowed; funds released to the seller', 'msg.loadFailed':'Failed to load data: {e}'
   }
-  const log=document.getElementById('orderLog');log.innerHTML='<div class="status-line info">下单中…</div>';
-  const r=await api('/order',{method:'POST',body:JSON.stringify({buyerKey,agentId,skillId})});
-  if(!r.ok){log.innerHTML='<div class="status-line warn">失败: '+r.error+'</div>';return;}
-  log.innerHTML=r.steps.map(s=>'<div class="status-line '+s[0]+'">'+s[1]+'</div>').join('');
+};
+
+let LANG = 'zh';
+const t = (key, vars) => {
+  let s = (I18N[LANG] && I18N[LANG][key]) || (I18N.zh[key]) || key;
+  if (vars) for (const k in vars) s = s.replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]);
+  return s;
+};
+
+function setLang(lang) {
+  LANG = lang === 'en' ? 'en' : 'zh';
+  try { localStorage.setItem('agenthub-lang', LANG); } catch (e) {}
+  document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('.langswitch button').forEach(b => b.classList.toggle('active', b.dataset.lang === LANG));
+  renderAll();
+}
+
+/* ==================== State ==================== */
+let S = null, tab = 'registry', GATE = { enabled: false };
+const api = (p, opt) => fetch('/api' + p, { headers: { 'Content-Type': 'application/json' }, ...opt })
+  .then(r => r.json());
+
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.className = 'toast' + (isErr ? ' err' : ''); }, 3200);
+}
+
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g,
+  c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const shortAddr = a => a.length <= 14 ? a : a.slice(0, 10) + '…' + a.slice(-4);
+
+function showTab(name, btn) {
+  tab = name;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b === btn));
+  ['registry','market','explorer','teach'].forEach(x => {
+    document.getElementById('tab-' + x).style.display = x === name ? '' : 'none';
+  });
+  /* hero 票根只属于「注册中心」落地页；切到其他 tab 立即收起，让内容贴着 tab 栏出现 */
+  const landing = document.getElementById('landing');
+  if (landing) landing.style.display = name === 'registry' ? '' : 'none';
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function refresh() {
+  try {
+    S = await api('/state');
+  } catch (e) {
+    toast(t('msg.loadFailed', { e: e.message }), true);
+    return;
+  }
+  try { GATE = await api('/repugate'); } catch (e) { GATE = { enabled: false }; }
+  renderAll();
+}
+
+function renderAll() {
+  if (!S) return;
+  renderChainChip();
+  renderStats();
+  renderTicker();
+  if (tab === 'registry') renderRegistry();
+  if (tab === 'market') renderMarket();
+  if (tab === 'explorer') renderLedger();
+  if (tab === 'teach') renderTeachTable();
+}
+
+/* 顶部指标条带（票根里的数字板） */
+function renderStats() {
+  const orders = S.orders || [];
+  const allowed = orders.filter(o => (o.status || 'RELEASED') === 'RELEASED').length;
+  const blocked = orders.filter(o => o.status === 'BLOCKED').length;
+  const skills = S.agents.reduce((n, a) => n + a.skills.length, 0);
+  const gateOn = !!(GATE && GATE.enabled);
+  const cell = (label, value, cls, sub) =>
+    '<article class="metric ' + (cls || '') + '">' +
+      '<span class="metric-label">' + label + '</span>' +
+      '<strong>' + value + '</strong>' +
+      '<small>' + (sub || '&nbsp;') + '</small>' +
+    '</article>';
+  document.getElementById('statsBar').innerHTML =
+    cell(t('stat.agents'), S.agents.length, '', t('stat.events') + ' ' + S.ledger.length) +
+    cell(t('stat.skills'), skills) +
+    cell(t('stat.orders'), orders.length) +
+    cell(t('stat.allowed'), allowed, 'allow') +
+    cell(t('stat.blocked'), blocked, 'block') +
+    cell(t('stat.gate'), gateOn ? 'ON' : 'OFF', gateOn ? 'accent' : 'review',
+      gateOn ? t('stat.gateOn') : t('stat.gateOff'));
+}
+
+function renderChainChip() {
+  document.getElementById('chainStat').textContent =
+    t('chain.blocks', { b: S.block, n: S.agents.length });
+  const chip = document.getElementById('chainChip');
+  chip.className = 'status ' + (S && S.agents ? 'online' : 'offline');
+}
+
+/* 票根存根上的门禁标识 */
+function renderTicker() {
+  const el = document.getElementById('tickerGate');
+  if (!el) return;
+  const on = !!(GATE && GATE.enabled);
+  el.textContent = (currentModel ? currentModel() : 'B3_REPUGATE') + (on ? ' · ON' : ' · OFF');
+}
+
+/* 当前门禁模型（模型选择卡取值） */
+function currentModel() {
+  const btn = document.querySelector('#gateModel .model-card.active');
+  return btn ? btn.dataset.model : 'B3_REPUGATE';
+}
+function bindModelSwitch() {
+  document.querySelectorAll('#gateModel .model-card').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#gateModel .model-card').forEach(x => x.classList.toggle('active', x === b));
+      renderTicker();
+    });
+  });
+}
+
+/* ==================== Registry ==================== */
+function renderRegistry() {
+  const sel = document.getElementById('fbAgent');
+  const prev = sel.value;
+  sel.innerHTML = S.agents.map(a =>
+    `<option value="${a.id}">#${a.id} ${esc(a.name)}</option>`).join('') ||
+    `<option value="">—</option>`;
+  if (prev) sel.value = prev;
+
+  document.getElementById('agentCount').textContent = S.agents.length;
+
+  document.getElementById('agentList').innerHTML = S.agents.length ? S.agents.map(a => {
+    const fb = a.feedbacks.length
+      ? (a.feedbacks.reduce((s, f) => s + f.value, 0) / a.feedbacks.length).toFixed(1)
+      : null;
+    const fbTag = fb === null
+      ? `<span class="tag tag-plain">${t('agent.score', { v: '—' })}</span>`
+      : `<span class="tag ${+fb >= 60 ? 'tag-green' : 'tag-amber'}">${t('agent.score', { v: fb })}</span>`;
+    return `<article class="pick-card">
+      <span class="pick-num">${a.id}</span>
+      <div class="pick-copy">
+        <strong>${esc(a.name)}<span class="tag ${a.homepage ? 'tag-green' : 'tag-plain'}">${a.homepage ? t('agent.selfHosted') : t('agent.platformHosted')}</span></strong>
+        <span class="agent-desc">${esc(a.desc)}</span>
+        <span class="agent-tags">
+          <span class="tag tag-plain">${t('agent.skills', { n: a.skills.length })}</span>
+          ${fbTag}
+          ${a.repugateScenario ? `<span class="tag">${t('agent.scenario', { v: esc(a.repugateScenario) })}</span>` : ''}
+        </span>
+        <small>owner ${esc(shortAddr(a.owner))}</small>
+        <span class="pick-links">
+          <a href="/agent/${a.id}">${t('agent.profile')} →</a>
+          ${a.homepage ? `<a href="${esc(a.homepage)}" target="_blank" rel="noopener">${t('agent.home')} →</a>` : ''}
+          <a href="/api/agents/${a.id}/card" target="_blank" rel="noopener">${t('agent.card')} →</a>
+        </span>
+      </div>
+    </article>`;
+  }).join('') : `<div class="empty" style="grid-column:1/-1">
+      <span class="ic">◍</span><p>${t('agent.none')}</p>
+      <p class="mono">${t('agent.noneSub')}</p></div>`;
+}
+
+/* ==================== Marketplace ==================== */
+function renderMarket() {
+  const CLIENT_ADDR = '0xA11cE0000000000000000000000000000000c0dE';
+  const credits = Object.entries(S.credits).map(([k, v]) => {
+    const isBuyer = k === CLIENT_ADDR;
+    const owner = S.agents.find(a => a.owner === k);
+    const label = isBuyer ? t('credit.you') : (owner ? owner.name : shortAddr(k));
+    return `<div><b class="${isBuyer ? 'pos' : ''}">${v}</b><span>${esc(label)}</span></div>`;
+  }).join('');
+  document.getElementById('creditPanel').innerHTML = credits;
+
+  const gs = document.getElementById('gateStatus');
+  if (GATE && GATE.enabled) {
+    gs.innerHTML = `<div class="callout">
+      <span>🛡️ ${t('gate.on', { url: esc(String(GATE.url || '').replace(/^https?:\/\//, '')) })}</span></div>`;
+  } else {
+    gs.innerHTML = `<div class="callout warn">
+      <span>⚠️ ${t('gate.off')}</span></div>`;
+  }
+
+  const rows = [];
+  S.agents.forEach(a => a.skills.forEach(s => {
+    rows.push(`<tr>
+      <td><span class="cell-main">${esc(a.name)}</span><span class="cell-sub">#${a.id} · ${esc(a.desc)}</span></td>
+      <td><span class="cell-main">${esc(s.name)}</span><span class="cell-sub">${esc(s.desc)}</span></td>
+      <td class="price">${s.price} LGC</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm" onclick="buy('client',${a.id},'${esc(s.id)}')">${t('skill.buy')}</button>
+        ${S.agents.length > 1 ? `<button class="btn btn-sm" style="margin-left:6px" onclick="buy('agent:auto',${a.id},'${esc(s.id)}')">${t('skill.buyAsAgent')}</button>` : ''}
+      </td>
+    </tr>`);
+  }));
+  document.getElementById('skillTable').innerHTML =
+    `<thead><tr><th>${t('skill.seller')}</th><th>${t('skill.name')} / ${t('skill.desc')}</th><th>${t('skill.price')}</th><th>${t('skill.action')}</th></tr></thead>
+     <tbody>${rows.join('') || `<tr class="table-empty"><td colspan="4"><div class="empty"><span class="ic">◇</span><p>${t('skill.none')}</p><p class="mono">${t('skill.noneSub')}</p></div></td></tr>`}</tbody>`;
+
+  document.getElementById('orderTable').innerHTML =
+    `<thead><tr><th>${t('order.id')}</th><th>${t('order.buyer')}</th><th>${t('order.seller')}</th>
+      <th>${t('order.amount')}</th><th>${t('order.mode')}</th><th>${t('order.gate')}</th></tr></thead>
+     <tbody>${S.orders.length ? S.orders.map(o => {
+       const st = o.status || 'RELEASED';
+       const g = o.gate || {};
+       const tone = st === 'RELEASED' ? 'tag-green' : st === 'BLOCKED' ? 'tag-red' : 'tag-amber';
+       const mark = st === 'RELEASED' ? '✓' : st === 'BLOCKED' ? '✕' : '!';
+       const detail = g.model
+         ? `<span class="cell-sub">${esc(g.model)}${g.scoreBps != null ? ` · ${(g.scoreBps / 100).toFixed(1)}%` : ''}</span>
+            ${g.reasons && g.reasons.length ? `<span class="cell-sub">${esc(g.reasons.slice(0, 2).join(' · '))}</span>` : ''}`
+         : '';
+       return `<tr>
+         <td class="mono">#${o.id}</td>
+         <td>${esc(o.buyerLabel)}</td>
+         <td><span class="cell-main">${esc(o.agentName)}</span><span class="cell-sub">${esc(o.skill)}</span></td>
+         <td class="price">${o.price} LGC</td>
+         <td><span class="tag ${o.live ? 'tag-green' : 'tag-plain'}">${o.live ? t('order.live') : t('order.simulated')}</span></td>
+         <td><span class="tag ${tone}">${mark} ${t('status.' + st)}</span>${detail}</td>
+       </tr>`;
+     }).join('') : `<tr class="table-empty"><td colspan="6"><div class="empty"><span class="ic">▤</span><p>${t('order.none')}</p><p class="mono">${t('order.noneSub')}</p></div></td></tr>`}</tbody>`;
+}
+
+/* ==================== Ledger ==================== */
+function renderLedger() {
+  const color = ev => ev.startsWith('Reg') || ev.startsWith('Service') ? 'var(--pos)'
+    : ev.startsWith('Give') ? 'var(--pos)'
+    : ev.startsWith('Gate') ? 'var(--brand-strong)'
+    : ev.startsWith('PaymentBlocked') ? 'var(--neg)'
+    : ev.startsWith('PaymentHeld') ? 'var(--warn)'
+    : ev.startsWith('Order') ? 'var(--warn)' : 'var(--brand)';
+  document.getElementById('txTable').innerHTML =
+    `<thead><tr><th>${t('tx.block')}</th><th>${t('tx.hash')}</th><th>${t('tx.event')}</th><th>${t('tx.data')}</th></tr></thead>
+     <tbody>${S.ledger.length ? S.ledger.map(x => `<tr>
+        <td class="mono">#${x.block}</td>
+        <td class="mono" style="color:var(--muted-2)">${esc(x.hash.slice(0, 12))}…</td>
+        <td class="mono" style="color:${color(x.ev)};font-weight:640">${esc(x.ev)}</td>
+        <td class="mono" style="color:#3b4166">${esc(x.data)}</td>
+      </tr>`).join('') : `<tr class="table-empty"><td colspan="4"><div class="empty"><span class="ic">⛓</span><p>${t('tx.none')}</p></div></td></tr>`}</tbody>`;
+}
+
+/* ==================== Teach ==================== */
+function renderTeachTable() {
+  const rows = [
+    ['teach.r1a','teach.r1b'], ['teach.r2a','teach.r2b'], ['teach.r3a','teach.r3b'],
+    ['teach.r4a','teach.r4b'], ['teach.r5a','teach.r5b']
+  ];
+  document.getElementById('teachTable').innerHTML =
+    `<thead><tr><th>${t('teach.m1')}</th><th>${t('teach.m2')}</th></tr></thead>
+     <tbody>${rows.map(([a, b]) => `<tr><td class="mono">${esc(t(a))}</td><td>${esc(t(b))}</td></tr>`).join('')}</tbody>`;
+}
+
+/* ==================== Actions ==================== */
+async function registerAgent() {
+  const name = document.getElementById('regName').value.trim();
+  if (!name) return toast(t('msg.regNeedName'), true);
+  const r = await api('/register', { method: 'POST', body: JSON.stringify({
+    name,
+    desc: document.getElementById('regDesc').value.trim(),
+    homepage: document.getElementById('regHome').value.trim() || null,
+    repugateScenario: document.getElementById('regScenario').value
+  }) });
+  if (!r.ok) return toast(t('msg.fail', { e: r.error }), true);
+  document.getElementById('regResult').innerHTML =
+    `<div class="callout" style="margin-top:15px">
+      <span>✓ ${t('msg.regOk', { id: r.agentId })} —
+      <a href="/agent/${r.agentId}">${t('msg.regView')}</a></span></div>`;
+  document.getElementById('regName').value = '';
+  document.getElementById('regDesc').value = '';
+  document.getElementById('regHome').value = '';
   refresh();
 }
-async function resetAll(){if(confirm('重置全部数据？（Agent 需重启进程重新注册）')){await api('/reset',{method:'POST'});refresh();}}
 
-refresh();
-setInterval(()=>{if(tab==='market'||tab==='explorer')refresh();},8000);
+async function giveFeedback() {
+  const agentId = +document.getElementById('fbAgent').value;
+  if (!agentId) return toast(t('msg.fail', { e: 'no agent' }), true);
+  const r = await api('/feedback', { method: 'POST', body: JSON.stringify({
+    agentId, value: +document.getElementById('fbVal').value,
+    note: document.getElementById('fbNote').value.trim()
+  }) });
+  if (r.ok) { toast(t('msg.fbOk')); document.getElementById('fbNote').value = ''; }
+  else toast(t('msg.fail', { e: r.error }), true);
+  refresh();
+}
+
+async function buy(buyerKey, agentId, skillId) {
+  if (buyerKey === 'agent:auto') {
+    const others = S.agents.filter(a => a.id !== agentId);
+    if (!others.length) return toast(t('msg.needOther'), true);
+    buyerKey = 'agent:' + others[0].id;
+  }
+  const log = document.getElementById('orderLog');
+  log.innerHTML = `<div class="flow" style="margin-top:14px"><div class="flow-head">${t('log.title')}</div>
+    <div class="flow-row info"><span class="flow-node">··</span><div class="flow-body">
+    <div class="txt">${t('log.starting')}</div></div></div></div>`;
+  log.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  const r = await api('/order', { method: 'POST', body: JSON.stringify({
+    buyerKey, agentId, skillId, model: currentModel()
+  }) });
+
+  if (!r.ok) {
+    log.innerHTML = `<div class="callout warn" style="margin-top:14px">
+      <span>⚠️ ${t('msg.fail', { e: esc(r.error) })}</span></div>`;
+    return;
+  }
+  const mark = { ok: '✓', warn: '!', info: 'i', pending: '·' };
+  log.innerHTML = `<div class="flow" style="margin-top:14px"><div class="flow-head">${t('log.title')}</div>` +
+    r.steps.map((s, i) => {
+      const type = s[0] === 'ok' ? 'ok' : s[0] === 'warn' ? 'warn' : 'info';
+      return `<div class="flow-row ${type}"><span class="flow-node">${String(i + 1).padStart(2, '0')}</span>
+        <div class="flow-body"><div class="txt">${mark[type]} ${esc(s[1])}</div></div></div>`;
+    }).join('') + `</div>`;
+
+  if (r.status === 'BLOCKED') toast(t('msg.gateBlocked'), true);
+  else if (r.status === 'REVIEW') toast(t('msg.gateHeld'));
+  else toast(t('msg.gateReleased'));
+
+  refresh();
+}
+
+async function resetAll() {
+  if (!confirm(t('msg.reset'))) return;
+  await api('/reset', { method: 'POST' });
+  refresh();
+}
+
+/* ==================== Boot ==================== */
+(function boot() {
+  let saved = null;
+  try { saved = localStorage.getItem('agenthub-lang'); } catch (e) {}
+  if (!saved) saved = (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+  document.querySelectorAll('.langswitch button').forEach(b => {
+    b.addEventListener('click', () => setLang(b.dataset.lang));
+  });
+  bindModelSwitch();
+  refresh().then(() => setLang(saved));
+  setInterval(() => { if (tab === 'market' || tab === 'explorer' || tab === 'registry') refresh(); }, 8000);
+})();
 </script>
+</body>
+</html>
 </body>
 </html>

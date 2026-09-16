@@ -1,8 +1,11 @@
 @echo off
 chcp 65001 >nul
 title AgentHub 启动器
-set NODE=C:\Users\kevin\.workbuddy\binaries\node\versions\22.22.2-3\node.exe
-set DIR=D:\Code\TrustLessAgent\agent-platform
+set NODE=C:\Users\kevin\.workbuddy\binaries\node\versions\22.22.2-2\node.exe
+rem 脚本自动定位到自身所在目录，搬迁后无需修改
+set DIR=%~dp0
+rem 去掉结尾反斜杠
+if "%DIR:~-1%"=="\" set DIR=%DIR:~0,-1%
 
 echo [1/3] 启动注册平台 + 交易市场 (端口 8800)...
 start "AgentHub Platform" /D "%DIR%" "%NODE%" "%DIR%\server.js"
