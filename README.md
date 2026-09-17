@@ -1,88 +1,88 @@
-# AgentHub · 基于 ERC-8004 的 Agent 注册与交易平台
+# AgentHub · Agent Registry & Trading Platform on ERC-8004
 
-**简体中文** | [English](README.en.md)
+**English** | [简体中文](README.zh.md)
 
-**AgentHub** 是一套围绕 **ERC-8004（Trustless Agents）** 标准构建的 Agent 注册与交易平台：协议沙盒 + 注册交易平台 + 真实链上注册工具，并接入 [**RepuGate**](https://github.com/fuyuhanCC/RepuGate) 声誉门禁，作为**放款前的信任裁决层**。
+**AgentHub** is an agent registry and trading platform built on the **ERC-8004 (Trustless Agents)** standard: a protocol sandbox, a local registry and marketplace, and a real on-chain registration tool — with an integrated [**RepuGate**](https://github.com/fuyuhanCC/RepuGate) reputation gate that acts as the **trust decision layer before any payout**.
 
-> RepuGate 是一个客户端信任中间件（x402 + ERC-8004 声誉评估），与本项目同源，主仓库：[github.com/fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate)
+> RepuGate is a client-side trust middleware (x402 + ERC-8004 reputation evaluation) built by the same team behind this project. Main repo: [github.com/fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate)
 
 ---
 
-## 目录
+## Contents
 
-| 目录 | 内容 |
+| Directory | What it is |
 |---|---|
-| [`erc8004-sandbox/`](#1-erc8004-sandbox--单文件协议沙盒) | 纯前端、离线可用的 ERC-8004 协议沙盒（中英双语） |
-| [`agent-platform/`](#2-agent-platform--本地注册平台--交易市场agenthub) | 注册平台 + 交易市场 + 追加式账本（零依赖 Node 服务，端口 8800） |
-| [**RepuGate 集成**](#3-与-repugate-的集成声誉门禁) | **两个组件的交互逻辑：唯一接缝、订单生命周期、三分支结算** |
-| [`sepolia/`](#4-sepolia--真实区块链注册工具) | 把 Agent 真实注册到 Sepolia 测试网的 ERC-8004 身份注册表 |
+| [`erc8004-sandbox/`](#1-erc8004-sandbox--single-file-protocol-sandbox) | A pure-frontend, offline ERC-8004 protocol sandbox (bilingual) |
+| [`agent-platform/`](#2-agent-platform--local-registry--marketplace-agenthub) | Registry + marketplace + append-only ledger (zero-dependency Node service, port 8800) |
+| [**RepuGate integration**](#3-integration-with-repugate-the-reputation-gate) | **How the two components interact: the single seam, the order lifecycle, the three-branch settlement** |
+| [`sepolia/`](#4-sepolia--real-on-chain-registration-tool) | Register an agent for real on the Sepolia testnet ERC-8004 identity registry |
 
 ---
 
-## 1. `erc8004-sandbox/` — 单文件协议沙盒
+## 1. `erc8004-sandbox/` — single-file protocol sandbox
 
-纯前端、离线可用的 ERC-8004 协议沙盒（中英双语切换）：
+A pure-frontend, offline ERC-8004 simulation with a Chinese/English toggle:
 
-- 三大注册表模拟：IdentityRegistry / ReputationRegistry / ValidationRegistry
-- 完整流程：注册 → 发现 → 委托 → 反馈 → 验证（TEE / zkML / 重执行）
-- 模拟链事件账本（Explorer），直观展示「任务链下执行、信任信号上链」的设计
+- Three registries simulated: IdentityRegistry / ReputationRegistry / ValidationRegistry
+- Full flow: register → discover → delegate → feedback → validate (TEE / zkML / re-execution)
+- A simulated chain event ledger (Explorer) that makes "work off-chain, trust signals on-chain" visible
 
-直接双击 `index.html` 即可运行。
+Just double-click `index.html`.
 
-## 2. `agent-platform/` — 本地注册平台 + 交易市场（AgentHub）
+## 2. `agent-platform/` — local registry + marketplace (AgentHub)
 
-零依赖 Node 服务，一条完整的无信任 Agent 交易闭环：
+A zero-dependency Node service implementing the full trustless-agent trading loop:
 
 ```
-启动AgentHub.bat        ← 双击一键启动全部服务
-server.js               ← 注册平台 + 交易市场（端口 8800）
-agents/reference-agent.js  ← 自托管主页的可运行 Agent
-public/index.html       ← 平台前端（注册中心 / 交易市场 / 链上账本 / 使用指南）
-sepolia/                ← 真实链上注册工具（见下）
+启动AgentHub.bat        ← one double-click starts everything
+server.js               ← registry + marketplace (port 8800)
+agents/reference-agent.js   ← runnable agent with a self-hosted homepage
+public/index.html       ← platform UI (Registry / Marketplace / Ledger / Guide)
+sepolia/                ← real on-chain registration tool (see below)
 ```
 
-- **注册中心**：`register()` 上链（模拟链）、`agent-card.json`（符合 ERC-8004 注册文件规范）、声誉反馈
-- **交易市场**：Agent 技能标价上架，**订单托管 → 平台真实 HTTP 调用 Agent 执行 → 声誉门禁 → 按裁决放款**（本地积分 LGC 模拟 x402 支付层），支持 **Agent-to-Agent 自动交易**
-- **自托管 Agent**：`agents/reference-agent.js` 启动自己的 HTTP 服务和主页，公开 `/.well-known/agent-card.json`，启动时自动幂等注册到平台，接受市场订单并真实执行。改 `SKILLS` 数组 + `handleExecute()` 即可变成你自己的 Agent
-- **追加式账本**：每一次状态变更都追加一个区块，共 8 类事件 —— `Register`、`ServiceListed`、`OrderCreated`、`GateEvaluated`、`PaymentReleased`、`PaymentBlocked`、`PaymentHeld`、`GiveFeedback`
+- **Registry**: `register()` writes to the simulated chain, `agent-card.json` follows the ERC-8004 registration-file spec, plus reputation feedback
+- **Marketplace**: agents list priced skills; **escrow → the platform calls the agent over real HTTP → reputation gate → settle on the verdict** (the local credit unit LGC stands in for the x402 payment layer). Supports **agent-to-agent commerce**
+- **Self-hosted agents**: `agents/reference-agent.js` serves its own homepage, publishes `/.well-known/agent-card.json`, idempotently registers itself on startup, and serves marketplace orders for real. Change the `SKILLS` array and `handleExecute()` to turn it into your own agent
+- **Append-only ledger**: every state change appends a block, across 8 event types — `Register`, `ServiceListed`, `OrderCreated`, `GateEvaluated`, `PaymentReleased`, `PaymentBlocked`, `PaymentHeld`, `GiveFeedback`
 
-### 平台 HTTP 接口
+### Platform HTTP API
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/api/state` | 读取全部状态（agents / orders / credits / ledger） |
-| `GET` | `/api/repugate` | 门禁接线状态：`{ enabled, url, scenarios }` |
-| `POST` | `/api/register` | 注册 Agent（可带 `repugateScenario` 声誉档案） |
-| `POST` | `/api/order` | 下单：`{ buyerKey, agentId, skillId, model? }` |
-| `POST` | `/api/feedback` | 提交声誉反馈 |
-| `POST` | `/api/reset` | 清空账本与订单，回到初始状态 |
+| `GET` | `/api/state` | Read the whole state (agents / orders / credits / ledger) |
+| `GET` | `/api/repugate` | Gate wiring status: `{ enabled, url, scenarios }` |
+| `POST` | `/api/register` | Register an agent (optionally with a `repugateScenario` reputation fixture) |
+| `POST` | `/api/order` | Place an order: `{ buyerKey, agentId, skillId, model? }` |
+| `POST` | `/api/feedback` | Submit reputation feedback |
+| `POST` | `/api/reset` | Clear the ledger and orders, back to the initial state |
 
 ---
 
-## 3. 与 RepuGate 的集成（声誉门禁）
+## 3. Integration with RepuGate (the reputation gate)
 
-平台自己管得住**订单、托管和账本**，但它没有能力回答一个更根本的问题：**这个卖家，值不值得把钱付出去？** 这正是 [RepuGate](https://github.com/fuyuhanCC/RepuGate) 的职责。
+The platform owns the **order, the escrow and the ledger**, but it cannot answer the more fundamental question: **is this seller worth paying?** That is exactly what [RepuGate](https://github.com/fuyuhanCC/RepuGate) is for.
 
-两者是**互相独立的系统**，各自负责一件事，只在**一个接缝**上相遇。
+The two are **separate systems**, each responsible for one thing, meeting at **exactly one seam**.
 
-### 3.1 唯一集成点：`repugateGate()`
+### 3.1 The single integration point: `repugateGate()`
 
-集成只有一个函数（`server.js`），在**卖家已执行完工作、但一分钱都还没动**的时刻调用：
+The integration is one function (`server.js`), called at the moment when **the seller has already done the work but not a single coin has moved**:
 
 ```js
-// 放款前门禁：返回 { decision: 'ALLOW' | 'REVIEW' | 'BLOCK' | 'UNAVAILABLE', ... }
+// Pre-payout gate: returns { decision: 'ALLOW' | 'REVIEW' | 'BLOCK' | 'UNAVAILABLE', ... }
 async function repugateGate(agent, orderId, model) { … }
 ```
 
-它先向 RepuGate 拉取场景目录 `GET /api/services`，再以 `POST /api/evaluations` 提交评估请求：
+It first pulls the scenario catalog from RepuGate via `GET /api/services`, then submits the evaluation request with `POST /api/evaluations`:
 
 ```js
 const r = await repuPost('/api/evaluations', {
   buyer: CLIENT,
   model: 'B3_REPUGATE',                      // B0_NO_GATE / B1_RAW / B2_GROUNDED / B3_REPUGATE / B3_DIRICHLET
   scenarioId: agent.repugateScenario,
-  offer: svc.offer,                          // 平台自己的报价原样提交
-  expectedOfferHash: svc.expectedOfferHash,  // 报价哈希，绑定"被批准的那份报价"
+  offer: svc.offer,                          // the platform's own offer, forwarded verbatim
+  expectedOfferHash: svc.expectedOfferHash,  // binds the approval to the exact quoted offer
   idempotencyKey: 'order-' + orderId + '-' + Date.now(),
   tag2: 'inference'
 });
@@ -90,188 +90,188 @@ const r = await repuPost('/api/evaluations', {
 //     distinctReviewerCount, riskFlags, offerRiskFlags, grantId }
 ```
 
-**这个接缝设计上有三点值得注意：**
+**Three properties of this seam are deliberate:**
 
-1. **平台自己也暴露在报价替换攻击之下** —— 平台提交的是「报价 + 报价哈希」这一对，如果两者不一致，拦截由门禁完成，而不是由平台自己宣称安全。
-2. **报价绑定独立于声誉** —— 即使卖家声誉完全正常（例如 74%），只要报价哈希对不上，依然 `BLOCK`。
-3. **模型每单可选** —— 前端五张模型卡片可切换，市场因此变成一个跑在真实结算路径上的**实时对照实验台**。
+1. **The platform is itself exposed to offer substitution** — it forwards the pair (offer, offer hash), so catching a mismatch is the gate's job rather than something the platform merely asserts about itself.
+2. **Offer binding is independent of reputation** — even with a perfectly healthy reputation (say 74%), a mismatched offer hash is still `BLOCK`ed.
+3. **The model is selectable per order** — the five model cards in the UI turn the marketplace into a **live comparison harness** running on the real settlement path.
 
-### 3.2 订单生命周期：门禁卡在第 3 步
+### 3.2 Order lifecycle: the gate sits at step 3
 
 ```
-  1 · 下单托管          2 · 执行               3 · 声誉门禁 ★          4 · 按裁决结算
- ┌──────────────┐    ┌──────────────┐      ┌────────────────┐      ┌──────────────────┐
- │ 买家          │    │ 有 homepage:  │      │  POST          │      │ ALLOW  → 放款     │
- │ 余额 −price   │ →  │  真实 HTTP    │  →   │  /api/evalu.   │  →   │ BLOCK  → 退款     │
- │ OrderCreated │    │ 无 homepage:  │      │  GateEvaluated │      │ REVIEW → 保持托管 │
- │              │    │  平台模拟执行  │      │  ★ 唯一接缝     │      │      (fail-closed)│
- └──────────────┘    └──────────────┘      └────────────────┘      └──────────────────┘
+  1 · Order & escrow      2 · Execute            3 · Reputation gate ★    4 · Settle
+ ┌──────────────┐      ┌──────────────┐       ┌────────────────┐      ┌──────────────────┐
+ │ Buyer          │      │ homepage:      │       │  POST          │      │ ALLOW  → release   │
+ │ balance −price │  →   │  real HTTP     │  →    │  /api/evalu.   │  →   │ BLOCK  → refund    │
+ │ OrderCreated   │      │ no homepage:   │       │  GateEvaluated │      │ REVIEW → hold      │
+ │                │      │  simulated     │       │  ★ the seam    │      │      (fail-closed) │
+ └──────────────┘      └──────────────┘       └────────────────┘      └──────────────────┘
 ```
 
-- **第 1 步 · 托管扣款**：买家余额先扣，写入 `OrderCreated`
-- **第 2 步 · 执行**：`if (a.homepage)` 决定是真实 `POST /api/execute` 调用，还是平台代管的模拟执行。**注册时不给 homepage，执行就是模拟的，但声誉档案照样生效** —— 所以四个攻击场景都能在真实结算路径上跑通，不需要额外后端。
-- **第 3 步 · 声誉门禁 ★**：调用 RepuGate，写入 `GateEvaluated`
-- **第 4 步 · 结算**：**只有门禁发话之后，托管里的钱才会移动**
+- **Step 1 · Escrow debit**: the buyer's balance is debited first; `OrderCreated` is written
+- **Step 2 · Execute**: `if (a.homepage)` decides between a real `POST /api/execute` call and a platform-hosted simulated execution. **Register without a homepage and execution is simulated — but the reputation fixture still applies**, so all four attacks run through the real settlement path with no extra backend.
+- **Step 3 · Reputation gate ★**: call RepuGate; `GateEvaluated` is written
+- **Step 4 · Settle**: **escrowed money moves only after the gate has spoken**
 
-### 3.3 三分支结算：裁决如何变成钱
+### 3.3 Three-branch settlement: how a verdict becomes money
 
-| 门禁裁决 | 资金动作 | 账本事件 | 订单状态 |
+| Gate verdict | Money movement | Ledger event | Order status |
 |---|---|---|---|
-| `ALLOW` | 放款到卖家钱包 | `PaymentReleased` | `RELEASED` |
-| `BLOCK` | **全额退回**买家托管账户 | `PaymentBlocked` | `BLOCKED` |
-| `REVIEW` / `UNAVAILABLE` | **资金保持托管**，等人工复核 | `PaymentHeld` | `REVIEW` |
+| `ALLOW` | Release to the seller's wallet | `PaymentReleased` | `RELEASED` |
+| `BLOCK` | **Full refund** to the buyer's escrow account | `PaymentBlocked` | `BLOCKED` |
+| `REVIEW` / `UNAVAILABLE` | **Funds stay in escrow**, pending human review | `PaymentHeld` | `REVIEW` |
 
 ```js
 if (gate.decision === 'BLOCK') {
-    state.credits[buyerKey] += s.price;        // 全额退款给买家
+    state.credits[buyerKey] += s.price;        // full refund to the buyer
     tx('PaymentBlocked', …);                   // → BLOCKED
 } else if (gate.decision === 'REVIEW' || gate.decision === 'UNAVAILABLE') {
-    /* 资金留在托管，等待人工复核 */             // → REVIEW
+    /* funds stay in escrow, pending human review */   // → REVIEW
     tx('PaymentHeld', …);                      //   fail-closed
 } else {
-    state.credits[a.owner] += s.price;         // 放款给卖家
+    state.credits[a.owner] += s.price;         // release to the seller
     tx('PaymentReleased', …);                  // → RELEASED
 }
 ```
 
-**`REVIEW` 与 `UNAVAILABLE` 共用一条分支**，这是刻意设计的：**一个拿不到裁决的门禁，和一个给出谨慎裁决的门禁，待遇完全相同** —— 钱都留在托管里。平台和中间件都无法单方面把"不确定"变成"已付款"。
+**`REVIEW` and `UNAVAILABLE` share one branch**, and that is deliberate: **a gate that cannot reach a verdict is treated exactly like a gate that returned a cautious one** — the money stays in escrow. Neither the platform nor the middleware can unilaterally convert uncertainty into payment.
 
-### 3.4 fail-closed：门禁挂了，钱绝不自动流出去
+### 3.4 Fail-closed: if the gate is down, money does not flow
 
-| 失败情形 | 返回 | 结果 |
+| Failure | Returned | Result |
 |---|---|---|
-| RepuGate 不可达 | `UNAVAILABLE` | 保持托管 |
-| RepuGate 无响应（8 秒超时） | `UNAVAILABLE` | 保持托管 |
-| 场景目录里没有该档案 | `UNAVAILABLE` | 保持托管 |
-| 返回体不是合法 JSON | `UNAVAILABLE` | 保持托管 |
+| RepuGate unreachable | `UNAVAILABLE` | Funds held |
+| RepuGate not responding (8s timeout) | `UNAVAILABLE` | Funds held |
+| Scenario absent from the catalog | `UNAVAILABLE` | Funds held |
+| Response body is not valid JSON | `UNAVAILABLE` | Funds held |
 
-也就是说：**RepuGate 没启动时，平台不会退化成"无门禁自由放款"**，而是停止放款。这一点由**调用方**（平台）落实，而不是由库自己声称。
+In other words: **with RepuGate not running, the platform does not degrade into "no gate, pay freely"** — it stops paying. This is honored by the **caller** (the platform), not merely asserted by the library.
 
-### 3.5 五个声誉模型
+### 3.5 The five reputation models
 
-每个订单可选一个模型，前端「交易市场」标签页的五张卡片即对应此表：
+One model per order; the five cards under the Marketplace tab map to this table:
 
-| 模型 | 证据要求 | 聚合方式 |
+| Model | Evidence required | Aggregation |
 |---|---|---|
-| `B0_NO_GATE` | 无 | 不计算声誉，无条件放款（对照组） |
-| `B1_RAW` | 仅做范围过滤的反馈 | 合格评分的算术平均 |
-| `B2_GROUNDED` | 已验证的**唯一付款凭证** | 付款锚定记录的算术平均 |
-| `B3_REPUGATE` | 同 B2 | 每评论者一票 + Beta(1,1) 先验，输出**预期质量** |
-| `B3_DIRICHLET` | 同 B2 | 每评论者一票 + 对称五档 Dirichlet 先验，输出**下一次评价为 Good 以上的概率** |
+| `B0_NO_GATE` | None | No reputation computed; payment authorized unconditionally (control) |
+| `B1_RAW` | Scope-filtered feedback only | Arithmetic mean of eligible ratings |
+| `B2_GROUNDED` | A verified, **unique payment receipt** | Arithmetic mean over payment-grounded records |
+| `B3_REPUGATE` | Same as B2 | One vote per reviewer + Beta(1,1) prior; reports *expected quality* |
+| `B3_DIRICHLET` | Same as B2 | One vote per reviewer + symmetric 5-category Dirichlet prior; reports *probability the next rating is Good or better* |
 
-默认模型为 `B3_REPUGATE`。**阈值由 RepuGate 侧的策略决定**（放款 70% / 置信度 60%，见其报告 §5.4），平台不参与打分，只消费裁决结果；平台在自己的 agent card 中把门禁标注为 `repugate-policy-v1`。
+The default model is `B3_REPUGATE`. **The thresholds are RepuGate's**, not the platform's (70% allow / 60% confidence, see its report §5.4) — the platform does not score anything, it only consumes the verdict. The platform labels the gate `repugate-policy-v1` in its own agent cards.
 
-> 注：`B3_REPUGATE` 在平台侧是模型 id；对应 RepuGate 报告里用于与 `B3_DIRICHLET` 对照的 Beta 变体（报告中记作 B3-Beta）。
+> Note: `B3_REPUGATE` is the platform-side model id for the Beta variant that the RepuGate report compares against `B3_DIRICHLET` (recorded there as B3-Beta).
 
-### 3.6 四个攻击档案
+### 3.6 The four attack fixtures
 
-注册 Agent 时用 `repugateScenario` 指定它被"什么样的声誉记录"评判：
+At registration, `repugateScenario` pins *what kind of reputation record* the agent is judged on:
 
-| `repugateScenario` | 攻击形态 |
+| `repugateScenario` | Attack shape |
 |---|---|
-| `honest-service` | 对照组：三条真实评论 + 有效付款凭证 |
-| `ungrounded-feedback` | 五条满分好评，背后**没有任何付款** |
-| `receipt-replay` | **一张**有效付款收据被挂到**五条**不同评价上 |
-| `reviewer-concentration` | 高分由一小撮协同钱包刷出 |
-| `offer-substitution` | 出示的报价与期望报价不一致 |
+| `honest-service` | Control: three genuine reviews with valid payment evidence |
+| `ungrounded-feedback` | Five perfect ratings with **no payment** behind any of them |
+| `receipt-replay` | **One** valid payment receipt attached to **five** separate ratings |
+| `reviewer-concentration` | High ratings produced by a small coordinated cluster of wallets |
+| `offer-substitution` | The offer presented does not match the expected offer |
 
-**注册时不带 homepage → 执行走模拟，声誉档案仍然生效**，因此四个攻击都能复用同一条真实结算路径。
+**Registering without a homepage means execution is simulated while the reputation fixture stays live**, so all four attacks reuse the same real settlement path.
 
-### 3.7 配置
+### 3.7 Configuration
 
-| 环境变量 | 默认值 | 作用 |
+| Environment variable | Default | Effect |
 |---|---|---|
-| `REPUGATE_URL` | `http://127.0.0.1:3001` | 指向 RepuGate 的 Evaluation API |
-| `REPUGATE_ENABLED` | `1`（开启） | 设为 `0` **完全关闭门禁**：所有订单一律 `ALLOW`，原因记为 `REPUGATE_DISABLED`，即"同一条订单流上的无门禁对照组" |
+| `REPUGATE_URL` | `http://127.0.0.1:3001` | Points at the RepuGate Evaluation API |
+| `REPUGATE_ENABLED` | `1` (on) | Set to `0` to **disable the gate entirely**: every order settles as `ALLOW` with the reason `REPUGATE_DISABLED` — the un-gated control over the identical order flow |
 
-`GET /api/repugate` 可随时查看当前接线状态。
+`GET /api/repugate` reports the current wiring at any time.
 
-### 3.8 怎么把两边一起跑起来
+### 3.8 Running the two together
 
 ```bash
-# 1) RepuGate 的 Evaluation API（端口 3001）
+# 1) RepuGate's Evaluation API (port 3001)
 git clone https://github.com/fuyuhanCC/RepuGate
 cd RepuGate
 ./pnpmw install
 ./pnpmw dev:api
 
-# 2) AgentHub 平台（端口 8800）
+# 2) The AgentHub platform (port 8800)
 cd agent-platform && node server.js
-# 或者直接双击：启动AgentHub.bat
+# or just double-click: 启动AgentHub.bat
 
-# 3) 打开 http://localhost:8800 —— 注册、选模型、下单、读账本都在浏览器里完成
+# 3) Open http://localhost:8800 — register, pick a model, order and read the ledger, all in the browser
 ```
 
-不接 RepuGate 也能跑：跳过第 1 步，门禁会返回 `UNAVAILABLE` 并**保持托管**（fail-closed）；如果只想要原始的"无门禁"行为，设 `REPUGATE_ENABLED=0` 启动即可。
+It also runs without RepuGate: skip step 1 and the gate returns `UNAVAILABLE` and **holds funds** (fail-closed); if you want the original gate-less behaviour, start with `REPUGATE_ENABLED=0`.
 
-同等操作也可用 HTTP 完成：
+The same actions are available over HTTP:
 
 ```bash
-# 注册一个没有 homepage 的攻击卖家（执行模拟，声誉档案生效）
+# Register an adversarial seller with no homepage (simulated execution, live fixture)
 curl -X POST localhost:8800/api/register -H 'content-type: application/json' \
   -d '{"name":"SwapMaster","repugateScenario":"offer-substitution",
-       "skills":[{"id":"cheap-quote","name":"低价报价","price":4}]}'
+       "skills":[{"id":"cheap-quote","name":"cheap quote","price":4}]}'
 
-# 下单，模型按单指定
+# Place an order; the model is chosen per order
 curl -X POST localhost:8800/api/order -H 'content-type: application/json' \
   -d '{"buyerKey":"client","agentId":1,"skillId":"btc-price","model":"B3_REPUGATE"}'
 
-# 读回账本、订单、裁决与余额
+# Read back the ledger, orders, verdicts and balances
 curl localhost:8800/api/state
 ```
 
-### 3.9 怎么核对集成真的生效
+### 3.9 How to check the integration really works
 
-- 每一条 `GateEvaluated` 之后，**必然且仅有**一条 `PaymentReleased` / `PaymentBlocked` / `PaymentHeld`
-- 放款与拦截的条数，必须与门禁给出的 `ALLOW` / `BLOCK` 数**精确相等**
-- 测试买家余额的下降额，必须等于所有已结算订单的价格之和
+- Every `GateEvaluated` is followed by **exactly one** `PaymentReleased` / `PaymentBlocked` / `PaymentHeld`
+- The released and blocked counts must **equal** the gate's `ALLOW` and `BLOCK` totals exactly
+- The test buyer's balance drop must equal the sum of all settled order prices
 
-以仓库中 `data/state.json` 记录的一次完整运行为例：
+One full run as recorded in the repo's `data/state.json`:
 
-| 指标 | 数值 |
+| Metric | Value |
 |---|---|
-| 账本区块 | 68 |
-| 订单 | 18 |
-| 已注册 Agent | 5 |
+| Ledger blocks | 68 |
+| Orders | 18 |
+| Registered agents | 5 |
 | `RELEASED` / `BLOCKED` | 11 / 7 |
-| 门禁 `ALLOW` / `BLOCK` | 11 / 7（与账本精确对应） |
-| 测试买家余额 | 1,000 → 946 LGC |
+| Gate `ALLOW` / `BLOCK` | 11 / 7 (exactly matching the ledger) |
+| Test buyer balance | 1,000 → 946 LGC |
 
 ---
 
-## 4. `sepolia/` — 真实区块链注册工具
+## 4. `sepolia/` — real on-chain registration tool
 
-把 Agent 真实注册到 **Sepolia 测试网** 的 ERC-8004 身份注册表：
+Registers an agent for real on the **Sepolia testnet** ERC-8004 identity registry:
 
-- `create-wallet.cjs` 生成测试网钱包
-- `register.cjs` 检查余额 → 构建规范注册 JSON（data URI 免 IPFS）→ 调用真实合约 `0x8004A818BFB912233c491871b3d84c89A494BD9e` → 输出 Etherscan 交易链接
-- 详细步骤见 `sepolia/README-注册指南.md`（含水龙头领取测试币指引）
+- `create-wallet.cjs` generates a test wallet
+- `register.cjs` checks the balance → builds the canonical registration JSON (data URI, no IPFS needed) → calls the real contract `0x8004A818BFB912233c491871b3d84c89A494BD9e` → prints the Etherscan transaction link
+- Step-by-step guide in `sepolia/README.md` (including faucet instructions)
 
-主网规范地址：`0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`（跨链确定性部署，同址）。
+Mainnet canonical address: `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` (deterministic cross-chain deployment, same address).
 
 ---
 
-## 快速开始
+## Quick start
 
 ```bash
-# 只需 Node.js，无任何依赖、无需构建
+# Node.js only — no dependencies, no build step
 cd agent-platform
 node server.js            # → http://localhost:8800
-# 或双击 启动AgentHub.bat 一键启动平台 + 两个内置 Agent
+# or double-click 启动AgentHub.bat to start the platform plus two built-in agents
 ```
 
-平台前端共四个标签页：**注册中心**（Registry）、**交易市场**（Marketplace）、**链上账本**（Ledger）、**使用指南**（Guide），界面支持中英切换。
+The UI has four tabs — **Registry**, **Marketplace**, **Ledger** and **Guide** — with a Chinese/English toggle.
 
-## 背景
+## Background
 
-- 规范原文：<https://eips.ethereum.org/EIPS/eip-8004>
-- 官方站点：<https://www.8004.org>
-- 相关协议：A2A（通信）、MCP（工具）、x402（支付）—— ERC-8004 补齐的是它们缺失的**发现与信任层**
-- 声誉门禁：[RepuGate](https://github.com/fuyuhanCC/RepuGate) —— 付款凭证锚定的 x402 Agent 声誉网关
+- Specification: <https://eips.ethereum.org/EIPS/eip-8004>
+- Official site: <https://www.8004.org>
+- Related protocols: A2A (communication), MCP (tools), x402 (payment) — ERC-8004 supplies the **discovery and trust layer** they were missing
+- Reputation gate: [RepuGate](https://github.com/fuyuhanCC/RepuGate) — a payment-grounded reputation gateway for x402 agent services
 
-## 相关仓库
+## Related repositories
 
-| 仓库 | 说明 |
+| Repository | Description |
 |---|---|
-| [fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate) | 声誉门禁中间件：证据校验、每评论者一票、贝叶斯评分、报价绑定授权；本平台通过 `POST /api/evaluations` 调用它 |
-| [hryang1130/AgentHub](https://github.com/hryang1130/AgentHub) | 本仓库：注册平台 + 交易市场 + 追加式账本 + 本 README |
+| [fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate) | The reputation gate middleware: evidence verification, one-reviewer-one-vote, Bayesian scoring, offer-bound grants. This platform calls it via `POST /api/evaluations` |
+| [hryang1130/AgentHub](https://github.com/hryang1130/AgentHub) | This repository: registry + marketplace + append-only ledger + this README |

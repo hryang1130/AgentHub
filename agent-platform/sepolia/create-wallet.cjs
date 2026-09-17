@@ -21,4 +21,4 @@ console.log('✅ 测试网钱包已生成');
 console.log('   地址: ' + w.address);
 console.log('   已写入 sepolia/.env（测试网专用，请勿存入真实资产）');
 console.log('');
-console.log('下一步：给这个地址领取 Sepolia 测试 ETH（见 README-注册指南.md）');
+console.log('下一步：给这个地址领取 Sepolia 测试 ETH（见 sepolia/README.md）');
