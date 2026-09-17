@@ -1,7 +1,7 @@
 /*
- * create-wallet.cjs — 生成一个专用于演示的 Sepolia 钱包
+ * create-wallet.cjs — 生成一个 Sepolia 测试网钱包
  * 运行: NODE_PATH=<工作区>/node_modules node create-wallet.cjs
- * 结果写入同目录 .env（含私钥，仅用于测试网演示！）
+ * 结果写入同目录 .env（含私钥，仅用于测试网！）
  */
 const { Wallet } = require('ethers');
 const fs = require('fs');
@@ -17,7 +17,7 @@ if (fs.existsSync(envPath)) {
 }
 const w = Wallet.createRandom();
 fs.writeFileSync(envPath, 'PRIVATE_KEY=' + w.privateKey + '\nADDRESS=' + w.address + '\n');
-console.log('✅ 演示钱包已生成');
+console.log('✅ 测试网钱包已生成');
 console.log('   地址: ' + w.address);
 console.log('   已写入 sepolia/.env（测试网专用，请勿存入真实资产）');
 console.log('');

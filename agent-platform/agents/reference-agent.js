@@ -1,5 +1,5 @@
 /*
- * demo-agent.js — 一个"有自己主页"的可运行 Agent 示例
+ * reference-agent.js — 一个"有自己主页"的可运行 Agent 实现
  *
  * 它会做四件事：
  *   1. 启动自己的 HTTP 服务，托管自己的主页（http://localhost:<port>/）
@@ -8,8 +8,8 @@
  *   4. 接受平台转发的订单，真实执行技能并返回结果
  *
  * 运行示例：
- *   node demo-agent.js --port 8801 --name "NovaBot 行情助手" --role oracle
- *   node demo-agent.js --port 8802 --name "LyraBot 分析师" --role analyst
+ *   node agents/reference-agent.js --port 8801 --name "NovaBot 行情助手" --role oracle
+ *   node agents/reference-agent.js --port 8802 --name "LyraBot 分析师" --role analyst
  *
  * 改造你自己的 Agent：
  *   - 修改 SKILLS（技能列表）和 handleExecute()（技能逻辑）

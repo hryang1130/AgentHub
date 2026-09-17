@@ -103,7 +103,7 @@ function scoreLabel(g) {
 /* ---------- 工具 ---------- */
 const mockHash = () => '0x' + crypto.randomBytes(20).toString('hex');
 const mockAddr = () => '0x' + crypto.randomBytes(20).toString('hex').padStart(40, '0');
-const CLIENT = '0xA11cE0000000000000000000000000000000c0dE'; // 演示买家
+const CLIENT = '0xA11cE0000000000000000000000000000000c0dE'; // 测试买家
 const LOCAL_REGISTRY = 'eip155:31337:0xL0ca1Reg1stry000000000000000000000000'; // 本地"链"标识
 
 function readBody(req) {
@@ -185,7 +185,7 @@ function registerAgent(b) {
     feedbacks: [], validations: [], createdAt: Date.now()
   };
   state.agents.push(a);
-  if (state.credits[owner] === undefined) state.credits[owner] = 200; // 新 Agent 空投启动资金，便于 Agent-to-Agent 交易演示
+  if (state.credits[owner] === undefined) state.credits[owner] = 200; // 新 Agent 空投启动资金，便于 Agent-to-Agent 交易
   if (b.instanceId) state.instances[b.instanceId] = id;
   tx('Register', 'agentId=' + id + ' · ' + a.name);
   a.skills.forEach(s => tx('ServiceListed', 'agentId=' + id + ' · ' + s.name + ' · ' + s.price + ' LGC'));
@@ -200,7 +200,7 @@ async function executeOrder(b) {
   const s = a.skills.find(x => x.id === b.skillId);
   if (!s) return { ok: false, error: '技能不存在' };
 
-  let buyerKey = CLIENT, buyerLabel = '演示买家';
+  let buyerKey = CLIENT, buyerLabel = '测试买家';
   if (b.buyerKey && b.buyerKey.startsWith('agent:')) {
     const ba = state.agents.find(x => x.id === +b.buyerKey.split(':')[1]);
     if (!ba) return { ok: false, error: '买家 agent 不存在' };
@@ -440,5 +440,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log('✅ 注册平台 + 交易市场已启动: http://localhost:' + PORT);
-  console.log('   演示买家地址: ' + CLIENT + ' (1000 LGC)');
+  console.log('   测试买家地址: ' + CLIENT + ' (1000 LGC)');
 });

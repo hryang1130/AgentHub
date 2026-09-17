@@ -1,10 +1,10 @@
-# AgentHub · ERC-8004 学习与演示项目
+# AgentHub · 基于 ERC-8004 的 Agent 注册与交易平台
 
 **简体中文** | [English](README.en.md)
 
-围绕 **ERC-8004（Trustless Agents）** 标准构建的课程展示与实操项目，是一个微缩的「无信任 Agent 经济」生态：协议演示 + 本地注册交易平台 + 真实链上注册工具，并支持接入 [**RepuGate**](https://github.com/fuyuhanCC/RepuGate) 声誉门禁，作为**放款前的信任裁决层**。
+**AgentHub** 是一套围绕 **ERC-8004（Trustless Agents）** 标准构建的 Agent 注册与交易平台：协议沙盒 + 注册交易平台 + 真实链上注册工具，并接入 [**RepuGate**](https://github.com/fuyuhanCC/RepuGate) 声誉门禁，作为**放款前的信任裁决层**。
 
-> RepuGate 是一个客户端信任中间件（x402 + ERC-8004 声誉评估），由同一课程团队开发，主仓库：[github.com/fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate)
+> RepuGate 是一个客户端信任中间件（x402 + ERC-8004 声誉评估），与本项目同源，主仓库：[github.com/fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate)
 
 ---
 
@@ -12,16 +12,16 @@
 
 | 目录 | 内容 |
 |---|---|
-| [`erc8004-demo/`](#1-erc8004-demo--单文件协议演示) | 纯前端、离线可用的 ERC-8004 协议演示（中英双语） |
+| [`erc8004-sandbox/`](#1-erc8004-sandbox--单文件协议沙盒) | 纯前端、离线可用的 ERC-8004 协议沙盒（中英双语） |
 | [`agent-platform/`](#2-agent-platform--本地注册平台--交易市场agenthub) | 注册平台 + 交易市场 + 追加式账本（零依赖 Node 服务，端口 8800） |
 | [**RepuGate 集成**](#3-与-repugate-的集成声誉门禁) | **两个组件的交互逻辑：唯一接缝、订单生命周期、三分支结算** |
 | [`sepolia/`](#4-sepolia--真实区块链注册工具) | 把 Agent 真实注册到 Sepolia 测试网的 ERC-8004 身份注册表 |
 
 ---
 
-## 1. `erc8004-demo/` — 单文件协议演示
+## 1. `erc8004-sandbox/` — 单文件协议沙盒
 
-纯前端、离线可用的 ERC-8004 模拟演示（中英双语切换）：
+纯前端、离线可用的 ERC-8004 协议沙盒（中英双语切换）：
 
 - 三大注册表模拟：IdentityRegistry / ReputationRegistry / ValidationRegistry
 - 完整流程：注册 → 发现 → 委托 → 反馈 → 验证（TEE / zkML / 重执行）
@@ -31,19 +31,19 @@
 
 ## 2. `agent-platform/` — 本地注册平台 + 交易市场（AgentHub）
 
-零依赖 Node 服务，一个微缩的「无信任 Agent 经济」生态：
+零依赖 Node 服务，一条完整的无信任 Agent 交易闭环：
 
 ```
 启动AgentHub.bat        ← 双击一键启动全部服务
 server.js               ← 注册平台 + 交易市场（端口 8800）
-agents/demo-agent.js    ← 自托管主页的可运行 Agent 示例
-public/index.html       ← 平台前端（注册中心 / 交易市场 / 链上账本 / 教学说明）
+agents/reference-agent.js  ← 自托管主页的可运行 Agent
+public/index.html       ← 平台前端（注册中心 / 交易市场 / 链上账本 / 使用指南）
 sepolia/                ← 真实链上注册工具（见下）
 ```
 
 - **注册中心**：`register()` 上链（模拟链）、`agent-card.json`（符合 ERC-8004 注册文件规范）、声誉反馈
 - **交易市场**：Agent 技能标价上架，**订单托管 → 平台真实 HTTP 调用 Agent 执行 → 声誉门禁 → 按裁决放款**（本地积分 LGC 模拟 x402 支付层），支持 **Agent-to-Agent 自动交易**
-- **自托管 Agent**：`demo-agent.js` 启动自己的 HTTP 服务和主页，公开 `/.well-known/agent-card.json`，启动时自动幂等注册到平台，接受市场订单并真实执行。改 `SKILLS` 数组 + `handleExecute()` 即可变成你自己的 Agent
+- **自托管 Agent**：`agents/reference-agent.js` 启动自己的 HTTP 服务和主页，公开 `/.well-known/agent-card.json`，启动时自动幂等注册到平台，接受市场订单并真实执行。改 `SKILLS` 数组 + `handleExecute()` 即可变成你自己的 Agent
 - **追加式账本**：每一次状态变更都追加一个区块，共 8 类事件 —— `Register`、`ServiceListed`、`OrderCreated`、`GateEvaluated`、`PaymentReleased`、`PaymentBlocked`、`PaymentHeld`、`GiveFeedback`
 
 ### 平台 HTTP 接口
@@ -224,7 +224,7 @@ curl localhost:8800/api/state
 
 - 每一条 `GateEvaluated` 之后，**必然且仅有**一条 `PaymentReleased` / `PaymentBlocked` / `PaymentHeld`
 - 放款与拦截的条数，必须与门禁给出的 `ALLOW` / `BLOCK` 数**精确相等**
-- 演示买家余额的下降额，必须等于所有已结算订单的价格之和
+- 测试买家余额的下降额，必须等于所有已结算订单的价格之和
 
 以仓库中 `data/state.json` 记录的一次完整运行为例：
 
@@ -235,7 +235,7 @@ curl localhost:8800/api/state
 | 已注册 Agent | 5 |
 | `RELEASED` / `BLOCKED` | 11 / 7 |
 | 门禁 `ALLOW` / `BLOCK` | 11 / 7（与账本精确对应） |
-| 演示买家余额 | 1,000 → 946 LGC |
+| 测试买家余额 | 1,000 → 946 LGC |
 
 ---
 
@@ -243,7 +243,7 @@ curl localhost:8800/api/state
 
 把 Agent 真实注册到 **Sepolia 测试网** 的 ERC-8004 身份注册表：
 
-- `create-wallet.cjs` 生成演示钱包
+- `create-wallet.cjs` 生成测试网钱包
 - `register.cjs` 检查余额 → 构建规范注册 JSON（data URI 免 IPFS）→ 调用真实合约 `0x8004A818BFB912233c491871b3d84c89A494BD9e` → 输出 Etherscan 交易链接
 - 详细步骤见 `sepolia/README-注册指南.md`（含水龙头领取测试币指引）
 
@@ -257,10 +257,10 @@ curl localhost:8800/api/state
 # 只需 Node.js，无任何依赖、无需构建
 cd agent-platform
 node server.js            # → http://localhost:8800
-# 或双击 启动AgentHub.bat 一键启动平台 + 两个示例 Agent
+# 或双击 启动AgentHub.bat 一键启动平台 + 两个内置 Agent
 ```
 
-平台前端共四个标签页：**注册中心**（Registry）、**交易市场**（Marketplace）、**链上账本**（Ledger）、**教学说明**（Guide），界面支持中英切换。
+平台前端共四个标签页：**注册中心**（Registry）、**交易市场**（Marketplace）、**链上账本**（Ledger）、**使用指南**（Guide），界面支持中英切换。
 
 ## 背景
 

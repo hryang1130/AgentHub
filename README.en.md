@@ -1,10 +1,10 @@
-# AgentHub · ERC-8004 Learning & Demo Project
+# AgentHub · Agent Registry & Trading Platform on ERC-8004
 
 [简体中文](README.md) | **English**
 
-A course project built around the **ERC-8004 (Trustless Agents)** standard: a miniature "trustless agent economy" made of a protocol demo, a local registration & trading platform, and a real on-chain registration tool — plus an optional [**RepuGate**](https://github.com/fuyuhanCC/RepuGate) reputation gate that acts as the **trust decision layer before any payout**.
+**AgentHub** is an agent registry and trading platform built on the **ERC-8004 (Trustless Agents)** standard: a protocol sandbox, a local registry and marketplace, and a real on-chain registration tool — with an integrated [**RepuGate**](https://github.com/fuyuhanCC/RepuGate) reputation gate that acts as the **trust decision layer before any payout**.
 
-> RepuGate is a client-side trust middleware (x402 + ERC-8004 reputation evaluation) built by the same course team. Main repo: [github.com/fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate)
+> RepuGate is a client-side trust middleware (x402 + ERC-8004 reputation evaluation) built by the same team behind this project. Main repo: [github.com/fuyuhanCC/RepuGate](https://github.com/fuyuhanCC/RepuGate)
 
 ---
 
@@ -12,14 +12,14 @@ A course project built around the **ERC-8004 (Trustless Agents)** standard: a mi
 
 | Directory | What it is |
 |---|---|
-| [`erc8004-demo/`](#1-erc8004-demo--single-file-protocol-demo) | A pure-frontend, offline ERC-8004 protocol demo (bilingual) |
+| [`erc8004-sandbox/`](#1-erc8004-sandbox--single-file-protocol-sandbox) | A pure-frontend, offline ERC-8004 protocol sandbox (bilingual) |
 | [`agent-platform/`](#2-agent-platform--local-registry--marketplace-agenthub) | Registry + marketplace + append-only ledger (zero-dependency Node service, port 8800) |
 | [**RepuGate integration**](#3-integration-with-repugate-the-reputation-gate) | **How the two components interact: the single seam, the order lifecycle, the three-branch settlement** |
 | [`sepolia/`](#4-sepolia--real-on-chain-registration-tool) | Register an agent for real on the Sepolia testnet ERC-8004 identity registry |
 
 ---
 
-## 1. `erc8004-demo/` — single-file protocol demo
+## 1. `erc8004-sandbox/` — single-file protocol sandbox
 
 A pure-frontend, offline ERC-8004 simulation with a Chinese/English toggle:
 
@@ -31,19 +31,19 @@ Just double-click `index.html`.
 
 ## 2. `agent-platform/` — local registry + marketplace (AgentHub)
 
-A zero-dependency Node service — a miniature "trustless agent economy":
+A zero-dependency Node service implementing the full trustless-agent trading loop:
 
 ```
 启动AgentHub.bat        ← one double-click starts everything
 server.js               ← registry + marketplace (port 8800)
-agents/demo-agent.js    ← runnable agent sample with a self-hosted homepage
+agents/reference-agent.js   ← runnable agent with a self-hosted homepage
 public/index.html       ← platform UI (Registry / Marketplace / Ledger / Guide)
 sepolia/                ← real on-chain registration tool (see below)
 ```
 
 - **Registry**: `register()` writes to the simulated chain, `agent-card.json` follows the ERC-8004 registration-file spec, plus reputation feedback
 - **Marketplace**: agents list priced skills; **escrow → the platform calls the agent over real HTTP → reputation gate → settle on the verdict** (the local credit unit LGC stands in for the x402 payment layer). Supports **agent-to-agent commerce**
-- **Self-hosted agents**: `demo-agent.js` serves its own homepage, publishes `/.well-known/agent-card.json`, idempotently registers itself on startup, and serves marketplace orders for real. Change the `SKILLS` array and `handleExecute()` to turn it into your own agent
+- **Self-hosted agents**: `agents/reference-agent.js` serves its own homepage, publishes `/.well-known/agent-card.json`, idempotently registers itself on startup, and serves marketplace orders for real. Change the `SKILLS` array and `handleExecute()` to turn it into your own agent
 - **Append-only ledger**: every state change appends a block, across 8 event types — `Register`, `ServiceListed`, `OrderCreated`, `GateEvaluated`, `PaymentReleased`, `PaymentBlocked`, `PaymentHeld`, `GiveFeedback`
 
 ### Platform HTTP API
@@ -224,7 +224,7 @@ curl localhost:8800/api/state
 
 - Every `GateEvaluated` is followed by **exactly one** `PaymentReleased` / `PaymentBlocked` / `PaymentHeld`
 - The released and blocked counts must **equal** the gate's `ALLOW` and `BLOCK` totals exactly
-- The demonstration buyer's balance drop must equal the sum of all settled order prices
+- The test buyer's balance drop must equal the sum of all settled order prices
 
 One full run as recorded in the repo's `data/state.json`:
 
@@ -235,7 +235,7 @@ One full run as recorded in the repo's `data/state.json`:
 | Registered agents | 5 |
 | `RELEASED` / `BLOCKED` | 11 / 7 |
 | Gate `ALLOW` / `BLOCK` | 11 / 7 (exactly matching the ledger) |
-| Demonstration buyer balance | 1,000 → 946 LGC |
+| Test buyer balance | 1,000 → 946 LGC |
 
 ---
 
@@ -243,7 +243,7 @@ One full run as recorded in the repo's `data/state.json`:
 
 Registers an agent for real on the **Sepolia testnet** ERC-8004 identity registry:
 
-- `create-wallet.cjs` generates a demo wallet
+- `create-wallet.cjs` generates a test wallet
 - `register.cjs` checks the balance → builds the canonical registration JSON (data URI, no IPFS needed) → calls the real contract `0x8004A818BFB912233c491871b3d84c89A494BD9e` → prints the Etherscan transaction link
 - Step-by-step guide in `sepolia/README-注册指南.md` (including faucet instructions)
 
@@ -257,7 +257,7 @@ Mainnet canonical address: `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` (determi
 # Node.js only — no dependencies, no build step
 cd agent-platform
 node server.js            # → http://localhost:8800
-# or double-click 启动AgentHub.bat to start the platform plus two sample agents
+# or double-click 启动AgentHub.bat to start the platform plus two built-in agents
 ```
 
 The UI has four tabs — **Registry**, **Marketplace**, **Ledger** and **Guide** — with a Chinese/English toggle.

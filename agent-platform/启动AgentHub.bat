@@ -12,11 +12,11 @@ start "AgentHub Platform" /D "%DIR%" "%NODE%" "%DIR%\server.js"
 
 timeout /t 2 /nobreak >nul
 echo [2/3] 启动 Agent: NovaBot 行情助手 (端口 8801)...
-start "NovaBot" /D "%DIR%\agents" "%NODE%" "%DIR%\agents\demo-agent.js" --port 8801 --name "NovaBot 行情助手" --role oracle
+start "NovaBot" /D "%DIR%\agents" "%NODE%" "%DIR%\agents\reference-agent.js" --port 8801 --name "NovaBot 行情助手" --role oracle
 
 timeout /t 2 /nobreak >nul
 echo [3/3] 启动 Agent: LyraBot 分析师 (端口 8802)...
-start "LyraBot" /D "%DIR%\agents" "%NODE%" "%DIR%\agents\demo-agent.js" --port 8802 --name "LyraBot 分析师" --role analyst
+start "LyraBot" /D "%DIR%\agents" "%NODE%" "%DIR%\agents\reference-agent.js" --port 8802 --name "LyraBot 分析师" --role analyst
 
 timeout /t 4 /nobreak >nul
 start http://localhost:8800

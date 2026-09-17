@@ -56,7 +56,7 @@ async function getProvider() {
   }
 
   const name = args.name || 'MyFirstOnchainAgent';
-  const desc = args.desc || 'My first ERC-8004 agent, registered live on Sepolia for a course demo.';
+  const desc = args.desc || 'My first ERC-8004 agent, registered live on Sepolia.';
   const registration = {
     type: 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1',
     name, description: desc,
@@ -81,5 +81,5 @@ async function getProvider() {
   console.log('🎉 恭喜 — 你的 Agent 已真实上链！');
   console.log('   链上身份: eip155:11155111:' + IDENTITY_REGISTRY + ':' + agentId.toString());
   console.log('   交易: https://sepolia.etherscan.io/tx/' + tx.hash);
-  console.log('   课堂展示时打开上面的链接即可看到真实的 Register 交易');
+  console.log('   打开上面的链接即可看到真实的 Register 交易');
 })().catch(e => { console.log('❌ ' + (e.shortMessage || e.message)); process.exit(1); });

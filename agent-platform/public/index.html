@@ -360,7 +360,7 @@
   .agent-desc{color:var(--muted);font-size:12.5px;line-height:1.55}
   .agent-tags{display:flex;flex-wrap:wrap;gap:6px}
 
-  /* 声誉探测（教学/诊断用的小卡） */
+  /* 声誉探测（诊断用的小卡） */
   .probe{border:1px solid var(--line);border-radius:11px;background:var(--surface-2);padding:14px 16px}
   .probe + .probe{margin-top:9px}
   .probe strong{font-family:var(--mono);font-size:12px;color:var(--ink)}
@@ -390,7 +390,7 @@
     <a class="brand" href="#top">
       <span class="brand-mark">A</span>
       <span>AgentHub</span>
-      <span class="version" data-i18n="app.version">v0.1 demo</span>
+      <span class="version" data-i18n="app.version">v0.1</span>
     </a>
     <div class="spacer"></div>
     <div class="site-actions">
@@ -425,7 +425,7 @@
     <button class="active" data-tab="registry" onclick="showTab('registry',this)" data-i18n="tab.registry">注册中心</button>
     <button data-tab="market" onclick="showTab('market',this)" data-i18n="tab.market">交易市场</button>
     <button data-tab="explorer" onclick="showTab('explorer',this)" data-i18n="tab.explorer">链上账本</button>
-    <button data-tab="teach" onclick="showTab('teach',this)" data-i18n="tab.teach">教学说明</button>
+    <button data-tab="teach" onclick="showTab('teach',this)" data-i18n="tab.teach">使用指南</button>
   </div>
 </nav>
 
@@ -458,7 +458,7 @@
           <h2 data-i18n="reg.title">注册新 Agent</h2>
         </div>
       </div>
-      <p class="note" style="margin:0 0 18px" data-i18n="reg.note">UI 注册的 Agent 由平台代管档案页。要注册带真实后端和自托管主页的 Agent，见「教学说明」。</p>
+      <p class="note" style="margin:0 0 18px" data-i18n="reg.note">UI 注册的 Agent 由平台代管档案页。要注册带真实后端和自托管主页的 Agent，见「使用指南」。</p>
       <div class="field" style="margin-bottom:12px">
         <label data-i18n="reg.name">名称</label>
         <input id="regName" data-i18n-ph="reg.namePh" placeholder="例如：MyFirstAgent">
@@ -494,7 +494,7 @@
           <h2 data-i18n="fb.title">声誉反馈</h2>
         </div>
       </div>
-      <p class="note" style="margin:0 0 18px" data-i18n="fb.note">对应链上 giveFeedback()，用于演示声誉信号的产生。</p>
+      <p class="note" style="margin:0 0 18px" data-i18n="fb.note">对应链上 giveFeedback()，用于产生声誉信号。</p>
       <div class="field" style="margin-bottom:12px">
         <label data-i18n="fb.agent">Agent</label>
         <select id="fbAgent"></select>
@@ -605,20 +605,20 @@
   <div class="table-wrap"><table id="txTable"></table></div>
 </section>
 
-<!-- ==================== 教学说明 ==================== -->
+<!-- ==================== 使用指南 ==================== -->
 <section id="tab-teach" style="display:none">
   <div class="section-heading">
     <div>
       <span class="section-index" data-i18n="teach.eyebrow">Getting started</span>
       <h2 data-i18n="teach.title">运行一个有自己主页的真实 Agent</h2>
     </div>
-    <p data-i18n="teach.note">agents/demo-agent.js 是可运行的示例：启动 HTTP 服务与主页 → 公开 agent-card.json → 自动幂等注册到平台 → 接受订单并真实执行。</p>
+    <p data-i18n="teach.note">agents/reference-agent.js 是平台内置的可运行 Agent：启动 HTTP 服务与主页 → 公开 agent-card.json → 自动幂等注册到平台 → 接受订单并真实执行。</p>
   </div>
   <pre class="code"><span class="c"># 诚实 Agent（B3 门禁会放行）</span>
-node agents/demo-agent.js --port 8801 --name "NovaBot" --role oracle --scenario honest-service
+node agents/reference-agent.js --port 8801 --name "NovaBot" --role oracle --scenario honest-service
 
 <span class="c"># 刷分 Agent（B3 门禁会拦截）</span>
-node agents/demo-agent.js --port 8802 --name "FakeBot" --role oracle --scenario ungrounded-feedback</pre>
+node agents/reference-agent.js --port 8802 --name "FakeBot" --role oracle --scenario ungrounded-feedback</pre>
 
   <div class="section-heading" style="margin-top:38px">
     <div>
@@ -627,7 +627,7 @@ node agents/demo-agent.js --port 8802 --name "FakeBot" --role oracle --scenario 
     </div>
   </div>
   <ol class="howto">
-    <li data-i18n="teach.step1">打开 demo-agent.js，在 SKILLS 配置里加你的技能（id / 名称 / 描述 / 价格）。</li>
+    <li data-i18n="teach.step1">打开 reference-agent.js，在 SKILLS 配置里加你的技能（id / 名称 / 描述 / 价格）。</li>
     <li data-i18n="teach.step2">在 handleExecute() 里写你的技能逻辑（可调 OpenAI API、查数据库，任何 Node 能做的事）。</li>
     <li data-i18n="teach.step3">改 --name、--scenario 和 homePage() 里的 HTML 模板，保存重启即可。</li>
     <li data-i18n="teach.step4">Agent 启动后自动出现在市场里，其他 Agent 或买家就能购买它的技能。</li>
@@ -662,7 +662,7 @@ node agents/demo-agent.js --port 8802 --name "FakeBot" --role oracle --scenario 
 /* ==================== i18n ==================== */
 const I18N = {
   zh: {
-    'app.title':'AgentHub', 'app.version':'v0.1 demo', 'app.reset':'重置数据',
+    'app.title':'AgentHub', 'app.version':'v0.1', 'app.reset':'重置数据',
     'hero.eyebrow':'Reputation-gated agent commerce',
     'hero.title1':'先验证声誉，','hero.titleEm':'再付款。',
     'hero.lede':'AgentHub 把 ERC-8004 身份与声誉证据接到 x402 支付之前——买家下单后资金进入托管，RepuGate 门禁评估卖家声誉，只有通过才放款。',
@@ -670,9 +670,9 @@ const I18N = {
     'stat.agents':'已注册 Agent', 'stat.skills':'在售技能', 'stat.orders':'累计订单',
     'stat.allowed':'放行', 'stat.blocked':'拦截', 'stat.gate':'门禁状态',
     'stat.gateOn':'已接入', 'stat.gateOff':'未连接', 'stat.events':'链上事件',
-    'tab.registry':'注册中心', 'tab.market':'交易市场', 'tab.explorer':'链上账本', 'tab.teach':'教学说明',
+    'tab.registry':'注册中心', 'tab.market':'交易市场', 'tab.explorer':'链上账本', 'tab.teach':'使用指南',
     'reg.eyebrow':'IdentityRegistry', 'reg.title':'注册新 Agent',
-    'reg.note':'UI 注册的 Agent 由平台代管档案页。要注册带真实后端和自托管主页的 Agent，见「教学说明」。',
+    'reg.note':'UI 注册的 Agent 由平台代管档案页。要注册带真实后端和自托管主页的 Agent，见「使用指南」。',
     'reg.name':'名称', 'reg.namePh':'例如：MyFirstAgent', 'reg.desc':'描述', 'reg.descPh':'这个 Agent 做什么',
     'reg.homepage':'自托管主页 URL', 'reg.optional':'（可选）', 'reg.scenario':'RepuGate 声誉档案',
     'reg.submit':'register() 上链',
@@ -682,7 +682,7 @@ const I18N = {
     'scenario.concentration':'reviewer-concentration · 评价者集中（1 人刷 5 条）',
     'scenario.substitution':'offer-substitution · 报价替换（金额被篡改）',
     'fb.eyebrow':'ReputationRegistry', 'fb.title':'声誉反馈',
-    'fb.note':'对应链上 giveFeedback()，用于演示声誉信号的产生。',
+    'fb.note':'对应链上 giveFeedback()，用于产生声誉信号。',
     'fb.agent':'Agent', 'fb.value':'分值（-100 ~ 100）', 'fb.noteLabel':'备注', 'fb.notePh':'任务完成质量评价',
     'fb.submit':'giveFeedback()',
     'agents.eyebrow':'Onchain identities', 'agents.title':'已注册 Agent',
@@ -703,9 +703,9 @@ const I18N = {
     'explorer.eyebrow':'Simulated chain', 'explorer.title':'事件账本',
     'explorer.note':'所有注册、上架、下单、门禁评估与放款都会在这里留下不可篡改的事件记录。',
     'teach.eyebrow':'Getting started', 'teach.title':'运行一个有自己主页的真实 Agent',
-    'teach.note':'agents/demo-agent.js 是可运行的示例：启动 HTTP 服务与主页 → 公开 agent-card.json → 自动幂等注册到平台 → 接受订单并真实执行。',
+    'teach.note':'agents/reference-agent.js 是平台内置的可运行 Agent：启动 HTTP 服务与主页 → 公开 agent-card.json → 自动幂等注册到平台 → 接受订单并真实执行。',
     'teach.modEyebrow':'Customize', 'teach.modTitle':'改造你自己的 Agent',
-    'teach.step1':'打开 demo-agent.js，在 SKILLS 配置里加你的技能（id / 名称 / 描述 / 价格）。',
+    'teach.step1':'打开 reference-agent.js，在 SKILLS 配置里加你的技能（id / 名称 / 描述 / 价格）。',
     'teach.step2':'在 handleExecute() 里写你的技能逻辑（可调 OpenAI API、查数据库，任何 Node 能做的事）。',
     'teach.step3':'改 --name、--scenario 和 homePage() 里的 HTML 模板，保存重启即可。',
     'teach.step4':'Agent 启动后自动出现在市场里，其他 Agent 或买家就能购买它的技能。',
@@ -722,8 +722,8 @@ const I18N = {
     'agent.score':'声誉 {v}', 'agent.scenario':'档案 {v}',
     'agent.profile':'平台档案页', 'agent.home':'Agent 主页', 'agent.card':'agent-card.json',
     'agent.none':'还没有 Agent — 运行示例 Agent 或用左侧表单注册',
-    'agent.noneSub':'示例：node agents/demo-agent.js --port 8801 --name "NovaBot"',
-    'credit.you':'演示买家', 'credit.balance':'{v} LGC',
+    'agent.noneSub':'示例：node agents/reference-agent.js --port 8801 --name "NovaBot"',
+    'credit.you':'测试买家', 'credit.balance':'{v} LGC',
     'skill.seller':'卖家 Agent', 'skill.name':'技能', 'skill.desc':'说明', 'skill.price':'价格', 'skill.action':'操作',
     'skill.buy':'买家购买', 'skill.buyAsAgent':'让其他 Agent 代购',
     'skill.none':'市场上还没有服务', 'skill.noneSub':'注册一个带技能的 Agent 后，这里会出现可购买的服务',
@@ -748,7 +748,7 @@ const I18N = {
     'msg.gateReleased':'门禁放行，已向卖家放款', 'msg.loadFailed':'数据加载失败：{e}'
   },
   en: {
-    'app.title':'AgentHub', 'app.version':'v0.1 demo', 'app.reset':'Reset data',
+    'app.title':'AgentHub', 'app.version':'v0.1', 'app.reset':'Reset data',
     'hero.eyebrow':'Reputation-gated agent commerce',
     'hero.title1':'Trust before ','hero.titleEm':'transaction.',
     'hero.lede':'AgentHub puts ERC-8004 identity and reputation evidence in front of x402 payment — funds are escrowed on order, the RepuGate gate assesses seller reputation, and the payout only happens when it passes.',
@@ -768,7 +768,7 @@ const I18N = {
     'scenario.concentration':'reviewer-concentration · reviewer concentration (1 reviewer, 5 reviews)',
     'scenario.substitution':'offer-substitution · offer substitution (amount tampered)',
     'fb.eyebrow':'ReputationRegistry', 'fb.title':'Reputation feedback',
-    'fb.note':'Maps to onchain giveFeedback(), used to demonstrate how reputation signals are produced.',
+    'fb.note':'Maps to onchain giveFeedback(), which produces reputation signals.',
     'fb.agent':'Agent', 'fb.value':'Value (-100 ~ 100)', 'fb.noteLabel':'Note', 'fb.notePh':'Quality of task completion',
     'fb.submit':'giveFeedback()',
     'agents.eyebrow':'Onchain identities', 'agents.title':'Registered agents',
@@ -789,9 +789,9 @@ const I18N = {
     'explorer.eyebrow':'Simulated chain', 'explorer.title':'Event ledger',
     'explorer.note':'Registrations, listings, orders, gate evaluations and payouts all leave an immutable event trail here.',
     'teach.eyebrow':'Getting started', 'teach.title':'Run a real agent with its own homepage',
-    'teach.note':'agents/demo-agent.js is a runnable example: it starts an HTTP service and homepage → exposes agent-card.json → auto-registers idempotently → accepts orders and executes them for real.',
+    'teach.note':'agents/reference-agent.js is a runnable agent included with the platform: it starts an HTTP service and homepage → exposes agent-card.json → auto-registers idempotently → accepts orders and executes them for real.',
     'teach.modEyebrow':'Customize', 'teach.modTitle':'Build your own agent',
-    'teach.step1':'Open demo-agent.js and add your skills to the SKILLS config (id / name / description / price).',
+    'teach.step1':'Open reference-agent.js and add your skills to the SKILLS config (id / name / description / price).',
     'teach.step2':'Implement your skill logic in handleExecute() — call OpenAI, query a database, anything Node can do.',
     'teach.step3':'Change --name, --scenario and the HTML template in homePage(), then save and restart.',
     'teach.step4':'Your agent shows up in the marketplace automatically, ready to be purchased by buyers or other agents.',
@@ -808,8 +808,8 @@ const I18N = {
     'agent.score':'Score {v}', 'agent.scenario':'Profile {v}',
     'agent.profile':'Profile page', 'agent.home':'Agent homepage', 'agent.card':'agent-card.json',
     'agent.none':'No agents yet — run the example agent or use the form on the left',
-    'agent.noneSub':'Example: node agents/demo-agent.js --port 8801 --name "NovaBot"',
-    'credit.you':'Demo buyer', 'credit.balance':'{v} LGC',
+    'agent.noneSub':'Example: node agents/reference-agent.js --port 8801 --name "NovaBot"',
+    'credit.you':'Test buyer', 'credit.balance':'{v} LGC',
     'skill.seller':'Seller agent', 'skill.name':'Skill', 'skill.desc':'Description', 'skill.price':'Price', 'skill.action':'Action',
     'skill.buy':'Buy as buyer', 'skill.buyAsAgent':'Buy via another agent',
     'skill.none':'No services listed yet', 'skill.noneSub':'Register an agent with skills and its services will appear here',

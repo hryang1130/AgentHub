@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ERC-8004 实操演示 · Trustless Agents</title>
+<title>ERC-8004 协议沙盒 · Trustless Agents</title>
 <style>
   :root{
     --bg:#F7F7F4; --card:#FFFFFF; --border:#E3E1D9; --border2:#C9C7BD;
@@ -85,7 +85,7 @@
 
 <header>
   <div>
-    <h1 data-i18n="app.title">ERC-8004 实操演示</h1>
+    <h1 data-i18n="app.title">ERC-8004 协议沙盒</h1>
     <div class="sub" data-i18n="app.sub"></div>
     <div class="sub" data-i18n="app.sub2"></div>
   </div>
@@ -261,20 +261,20 @@
 /* ================= 多语言 ================= */
 const I18N = {
   zh: {
-    'app.title':'ERC-8004 实操演示',
+    'app.title':'ERC-8004 协议沙盒',
     'app.sub':'Trustless Agents — 链上智能体信任层',
     'app.sub2':'模拟环境 · 三个注册表：IdentityRegistry / ReputationRegistry / ValidationRegistry',
-    'app.reset':'重置演示数据',
+    'app.reset':'重置状态',
     'lang.self':'English',
-    'tab.overview':'总览 · 演示脚本',
+    'tab.overview':'总览',
     'tab.register':'① 注册 Agent（运营方）',
     'tab.discover':'② 发现与委托（使用方）',
     'tab.feedback':'③ 反馈与验证',
     'tab.explorer':'④ 链上账本（Explorer）',
-    'ov.tag':'说明','ov.h':'这个演示在做什么',
+    'ov.tag':'说明','ov.h':'这个沙盒在做什么',
     'ov.text':'本页面模拟了 ERC-8004 标准的核心机制：<b>身份注册表</b>（ERC-721 智能体身份）、<b>声誉注册表</b>（标准化反馈信号）、<b>验证注册表</b>（可插拔独立验证）。所有"交易"都记录在下方的模拟链账本中，任务执行（A2A/MCP）则模拟为<b>链下行为</b>——这正是 ERC-8004 的设计：链上只存信任信号，通信与支付发生在标准之外。',
-    'ov.hint':'演讲提示：演示顺序建议 ①注册 → ②发现与委托 → ③反馈与验证，每一步完成后切到 ④账本页面看"链上发生了什么"。',
-    'ov.scriptTag':'脚本','ov.scriptH':'现场演示步骤',
+    'ov.hint':'推荐顺序：①注册 → ②发现与委托 → ③反馈与验证。每一步完成后切到 ④账本页面，看"链上发生了什么"。',
+    'ov.scriptTag':'步骤','ov.scriptH':'操作步骤',
     'ov.s1':'<b>注册</b>（约 1 分钟）：在「① 注册 Agent」填写名称和端点，点击铸造 → 得到 agentId 和模拟 IPFS 的 agentURI，切到账本看 <span class="mono" style="color:var(--blue)">Register</span> 事件。',
     'ov.s2':'<b>发现</b>：在「② 发现与委托」点开智能体的注册文件，展示 JSON 结构（A2A 卡 / MCP 端点 / ENS），解释"使用方就是这样发现智能体的"。',
     'ov.s3':'<b>委托</b>：选一个智能体执行任务——<b>故意选"高风险：资金操作"</b>，观察系统提示需要独立验证。',
@@ -282,7 +282,7 @@ const I18N = {
     'ov.s5':'<b>验证</b>：请求独立验证（选 TEE 或 zkML），等待几秒 → 验证者返回 0-100 分，账本出现 <span class="mono" style="color:var(--teal)">ValidationRequest / ValidationResponse</span>。',
     'ov.s6':'<b>收尾</b>：回到「② 发现与委托」，展示该智能体的声誉分数已经变化——"链上履历"就是这样积累的。',
     'ov.dataTag':'数据','ov.chainH':'当前链上状态',
-    'ov.ptsTag':'要点','ov.ptsH':'讲解时强调的三个设计',
+    'ov.ptsTag':'要点','ov.ptsH':'三个关键设计',
     'ov.p1':'<b>链上存指针、链下存内容</b>：注册表只存 agentURI，大文件在 IPFS。',
     'ov.p2':'<b>声誉只存信号、不存评分</b>：市场/保险各自读同样的信号算自己的分（见智能体卡片上的两种评分）。',
     'ov.p3':'<b>任务在链下、信任在链上</b>：A2A/MCP 通信不产生交易，只有信任信号上链。',
@@ -367,20 +367,20 @@ const I18N = {
     'seed.trade.note1':'执行速度快','seed.trade.note2':'有一次滑点偏大'
   },
   en: {
-    'app.title':'ERC-8004 Live Demo',
+    'app.title':'ERC-8004 Protocol Console',
     'app.sub':'Trustless Agents — On-chain Trust Layer for AI Agents',
     'app.sub2':'Simulated environment · Three registries: IdentityRegistry / ReputationRegistry / ValidationRegistry',
-    'app.reset':'Reset demo data',
+    'app.reset':'Reset state',
     'lang.self':'中文',
-    'tab.overview':'Overview · Demo Script',
+    'tab.overview':'Overview',
     'tab.register':'① Register Agent (Operator)',
     'tab.discover':'② Discover & Delegate (Client)',
     'tab.feedback':'③ Feedback & Validation',
     'tab.explorer':'④ On-chain Ledger (Explorer)',
-    'ov.tag':'About','ov.h':'What this demo does',
+    'ov.tag':'About','ov.h':'What this console does',
     'ov.text':'This page simulates the core mechanics of ERC-8004: the <b>Identity Registry</b> (ERC-721 agent identity), the <b>Reputation Registry</b> (standardized feedback signals) and the <b>Validation Registry</b> (pluggable independent validation). All "transactions" are recorded in the simulated chain ledger below, while task execution (A2A/MCP) is modeled as an <b>off-chain</b> action — this is exactly the ERC-8004 design: only trust signals live on-chain; communication and payments happen outside the standard.',
-    'ov.hint':'Presenter tip: suggested flow ① Register → ② Discover & Delegate → ③ Feedback & Validation. After each step, switch to ④ the ledger to show "what happened on-chain".',
-    'ov.scriptTag':'Script','ov.scriptH':'Live demo steps',
+    'ov.hint':'Suggested flow: ① Register → ② Discover & Delegate → ③ Feedback & Validation. After each step, switch to ④ the ledger to see "what happened on-chain".',
+    'ov.scriptTag':'Steps','ov.scriptH':'Walkthrough',
     'ov.s1':'<b>Register</b> (~1 min): fill in name and endpoints on "① Register Agent", click Mint → get an agentId and a simulated IPFS agentURI, then check the <span class="mono" style="color:var(--blue)">Register</span> event in the ledger.',
     'ov.s2':'<b>Discover</b>: on "② Discover & Delegate" open an agent\'s registration file, show the JSON structure (A2A card / MCP endpoint / ENS) and explain "this is how clients discover agents".',
     'ov.s3':'<b>Delegate</b>: run a task — <b>deliberately pick "High risk: funds involved"</b> and watch the system require independent validation.',
@@ -388,7 +388,7 @@ const I18N = {
     'ov.s5':'<b>Validate</b>: request independent validation (pick TEE or zkML), wait a few seconds → the verifier returns a 0–100 score; see <span class="mono" style="color:var(--teal)">ValidationRequest / ValidationResponse</span> in the ledger.',
     'ov.s6':'<b>Wrap up</b>: return to "② Discover & Delegate" and show that the agent\'s reputation has changed — this is how the on-chain track record accumulates.',
     'ov.dataTag':'Data','ov.chainH':'Current on-chain state',
-    'ov.ptsTag':'Key Points','ov.ptsH':'Three design points to emphasize',
+    'ov.ptsTag':'Key Points','ov.ptsH':'Three design points',
     'ov.p1':'<b>Pointers on-chain, content off-chain</b>: the registry stores only the agentURI; large files live on IPFS.',
     'ov.p2':'<b>Reputation stores signals, not scores</b>: markets and insurers read the same signals and compute their own scores (see the two scores on each agent card).',
     'ov.p3':'<b>Tasks off-chain, trust on-chain</b>: A2A/MCP communication creates no transactions — only trust signals go on-chain.',
@@ -533,7 +533,7 @@ function seedState(){
 }
 function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)); }catch(e){ return null; } }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function resetAll(){ if(confirm(LANG==='zh' ? '确定重置全部演示数据吗？' : 'Reset all demo data?')){ localStorage.removeItem(LS_KEY); state = seedState(); save(); renderAll(); } }
+function resetAll(){ if(confirm(LANG==='zh' ? '确定重置全部状态吗？' : 'Reset all state?')){ localStorage.removeItem(LS_KEY); state = seedState(); save(); renderAll(); } }
 
 state = load() || seedState(); save();
 

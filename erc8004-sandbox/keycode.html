@@ -107,26 +107,26 @@
 </div>
 
 <div class="card">
-  <h2><span class="tag t-blue">④ 对照</span>规范接口 ↔ 我们的本地演示实现</h2>
+  <h2><span class="tag t-blue">④ 对照</span>规范接口 ↔ 本地实现</h2>
   <table>
-    <tr><th>ERC-8004 规范接口</th><th>本地演示（agent-platform）</th><th>说明</th></tr>
+    <tr><th>ERC-8004 规范接口</th><th>本地实现（agent-platform）</th><th>说明</th></tr>
     <tr><td class="mono">register(string agentURI)</td><td class="mono">server.js → registerAgent()</td><td>本地发 agentId + 存 agentURI 指针，逻辑一致</td></tr>
     <tr><td class="mono">giveFeedback(int128 value, …)</td><td class="mono">server.js → /api/feedback</td><td>同样只存原始分值，评分由前端两种模型各自计算</td></tr>
     <tr><td class="mono">validationRequest / validationResponse</td><td class="mono">server.js → requestValidation()</td><td>同样 0-100 应答，验证方式可选</td></tr>
     <tr><td class="mono">注册文件 JSON（registration-v1）</td><td class="mono">agentCard() / agent-card.json</td><td>字段格式与规范一致（type/services/registrations/supportedTrust）</td></tr>
-    <tr><td class="mono">x402 支付（标准外）</td><td class="mono">OrderCreated / PaymentReleased（LGC 积分）</td><td>协议不含支付，本地用积分结算演示完整商业闭环</td></tr>
+    <tr><td class="mono">x402 支付（标准外）</td><td class="mono">OrderCreated / PaymentReleased（LGC 积分）</td><td>协议不含支付，本地用积分结算还原完整商业闭环</td></tr>
     <tr><td class="mono">真实链上 Events</td><td class="mono">模拟链账本（Explorer）</td><td>上 Sepolia 后即为真实交易（见 sepolia/register.cjs）</td></tr>
   </table>
 </div>
 
 <div class="card">
-  <h2><span class="tag t-teal">⑤ 节奏</span>建议的课堂展示顺序</h2>
+  <h2><span class="tag t-teal">⑤ 节奏</span>建议的阅读顺序</h2>
   <ol>
     <li><b>先讲结构</b>：用本页三个代码块讲"三大注册表各管什么"——身份（NFT）、声誉（信号）、验证（0-100 应答）。</li>
     <li><b>再跑真流程</b>：切到 AgentHub（node server.js），注册 → 下单 → 反馈，让抽象接口落到能看到的事件。</li>
     <li><b>最后上真链</b>：打开 Etherscan 的已验证合约或你自己的注册交易（sepolia/register.cjs 产出），证明"刚才的一切就是这笔交易"。</li>
   </ol>
-  <p class="muted" style="margin-top:8px">提示：讲解每段代码时，重点让学生注意 <span class="mono">giveFeedback</span> 的 int128 + tag 设计和 <span class="mono">getSummary</span> 的强制地址过滤——这两处最能体现"协议只做信任原语、不做应用决策"的设计哲学。</p>
+  <p class="muted" style="margin-top:8px">提示：阅读代码时重点留意 <span class="mono">giveFeedback</span> 的 int128 + tag 设计和 <span class="mono">getSummary</span> 的强制地址过滤——这两处最能体现"协议只做信任原语、不做应用决策"的设计哲学。</p>
 </div>
 
 </main>
